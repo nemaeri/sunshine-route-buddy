@@ -114,7 +114,10 @@ function StaffPage() {
     return rows;
   }, [staffQ.data, tab, search]);
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["staff"] });
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["staff"] });
+    qc.invalidateQueries({ queryKey: ["staff-roles-all"] });
+  };
 
   return (
     <>
