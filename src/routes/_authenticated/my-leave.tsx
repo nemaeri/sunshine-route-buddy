@@ -75,10 +75,7 @@ function MyLeavePage() {
         .eq("staff_id", staffId)
         .eq("year", currentYear);
       if (error) throw error;
-      return (data ?? []) as Array<{
-        leave_type: string; entitled_days: number | null; carried_over_days: number;
-        used_days: number; remaining_days: number | null;
-      }>;
+      return (data ?? []) as Balance[];
     },
   });
 
