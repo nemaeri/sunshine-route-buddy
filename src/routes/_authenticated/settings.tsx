@@ -200,19 +200,26 @@ function LeavePoliciesTab({ canEdit }: { canEdit: boolean }) {
   });
 
   const grouped = useMemo(() => {
-    const map: Record<string, any[]> = { teaching: [], non_teaching: [], support: [] };
+    // map[category][employment_type] = rows
+    const map: Record<string, Record<string, any[]>> = {
+      teaching:     { permanent: [], contract: [] },
+      non_teaching: { permanent: [], contract: [] },
+      support:      { permanent: [], contract: [] },
+    };
     (policiesQ.data ?? []).forEach((p: any) => {
-      if (map[p.staff_category]) map[p.staff_category].push(p);
+      const cat = map[p.staff_category];
+      if (cat && cat[p.employment_type]) cat[p.employment_type].push(p);
     });
     return map;
   }, [policiesQ.data]);
 
   return (
     <Card className="p-6">
-      <h3 className="font-display font-bold mb-1">Leave entitlements by staff category</h3>
+      <h3 className="font-display font-bold mb-1">Leave entitlements by staff category &amp; employment type</h3>
       <p className="text-sm text-muted-foreground mb-5">
-        Defaults per staff per year. Entitlements differ across Teaching, Non-teaching and Support staff.
-        Unused days carry over at the percentage set. Leave the days field blank for unlimited (e.g. unpaid leave).
+        Defaults per staff per year. Entitlements differ across Teaching, Non-teaching and Support staff,
+        and between Permanent and Contract employment. Unused days carry over at the percentage set.
+        Leave the days field blank for unlimited (e.g. unpaid leave).
       </p>
 
       <Tabs defaultValue="teaching">
@@ -223,27 +230,38 @@ function LeavePoliciesTab({ canEdit }: { canEdit: boolean }) {
         </TabsList>
         {STAFF_CATEGORIES.map((c) => (
           <TabsContent key={c.key} value={c.key}>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
-                  <tr>
-                    <th className="text-left p-3 font-semibold">Leave type</th>
-                    <th className="text-left p-3 font-semibold">Default days / year</th>
-                    <th className="text-left p-3 font-semibold">Carryover %</th>
-                    <th className="text-left p-3 font-semibold">Max carryover days</th>
-                    <th className="text-right p-3 font-semibold">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {grouped[c.key].map((p: any) => (
-                    <PolicyRow key={p.id} row={p} canEdit={canEdit} onSave={(r) => save.mutate(r)} />
-                  ))}
-                  {grouped[c.key].length === 0 && (
-                    <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No policies yet for this category</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <Tabs defaultValue="permanent">
+              <TabsList className="mb-3">
+                {EMPLOYMENT_TYPES.map((e) => (
+                  <TabsTrigger key={e.key} value={e.key}>{e.label}</TabsTrigger>
+                ))}
+              </TabsList>
+              {EMPLOYMENT_TYPES.map((e) => (
+                <TabsContent key={e.key} value={e.key}>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
+                        <tr>
+                          <th className="text-left p-3 font-semibold">Leave type</th>
+                          <th className="text-left p-3 font-semibold">Default days / year</th>
+                          <th className="text-left p-3 font-semibold">Carryover %</th>
+                          <th className="text-left p-3 font-semibold">Max carryover days</th>
+                          <th className="text-right p-3 font-semibold">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {grouped[c.key][e.key].map((p: any) => (
+                          <PolicyRow key={p.id} row={p} canEdit={canEdit} onSave={(r) => save.mutate(r)} />
+                        ))}
+                        {grouped[c.key][e.key].length === 0 && (
+                          <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No policies yet for this combination</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
           </TabsContent>
         ))}
       </Tabs>
@@ -252,10 +270,16 @@ function LeavePoliciesTab({ canEdit }: { canEdit: boolean }) {
 }
 
 const STAFF_CATEGORIES = [
-  { key: "teaching", label: "Teaching staff" },
-  { key: "non_teaching", label: "Non-teaching staff" },
-  { key: "support", label: "Support staff" },
+  { key: "teaching", label: "Teaching Staff" },
+  { key: "non_teaching", label: "Non-Teaching Staff" },
+  { key: "support", label: "Support Staff" },
 ] as const;
+
+const EMPLOYMENT_TYPES = [
+  { key: "permanent", label: "Permanent" },
+  { key: "contract", label: "Contract" },
+] as const;
+
 
 function PolicyRow({ row, canEdit, onSave }: { row: any; canEdit: boolean; onSave: (r: any) => void }) {
   const [local, setLocal] = useState(row);
