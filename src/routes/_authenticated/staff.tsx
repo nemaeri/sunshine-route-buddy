@@ -407,7 +407,16 @@ function NewStaffDialog({ onDone }: { onDone: () => void }) {
         <StaffFormFields form={form} setForm={setForm} classes={classesQ.data ?? []} />
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={() => m.mutate()} disabled={!form.first_name || !form.last_name || m.isPending}>
+          <Button
+            onClick={() => m.mutate()}
+            disabled={
+              !form.first_name ||
+              !form.last_name ||
+              (form.role === "Support Staff" && form.support_job === "Other" && !form.support_job_other.trim()) ||
+              m.isPending
+            }
+          >
+
             <Save className="size-4 mr-1" /> {m.isPending ? "Saving…" : "Save Staff"}
           </Button>
         </DialogFooter>
