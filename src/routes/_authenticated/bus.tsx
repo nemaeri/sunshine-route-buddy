@@ -11,7 +11,15 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, Bus, MapPin, Navigation } from "lucide-react";
+import { Plus, Bus, MapPin, Navigation, GripVertical } from "lucide-react";
+import {
+  DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 export const Route = createFileRoute("/_authenticated/bus")({
   component: BusPage,
@@ -195,30 +203,9 @@ function RouteDetail({ routeId, isAdmin, isDriver, userId }: { routeId: string; 
           {isAdmin && <NewStopDialog routeId={routeId} nextSeq={(stopsQ.data?.length ?? 0) + 1} onDone={() => qc.invalidateQueries({ queryKey: ["stops", routeId] })} />}
         </div>
         {stopsQ.data?.length === 0 && <p className="p-6 text-sm text-muted-foreground">No stops on this route yet.</p>}
-        <ol className="divide-y divide-border">
-          {stopsQ.data?.map((s: any, i: number) => (
-            <li key={s.id} className="px-5 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="size-7 rounded-full bg-brand-navy text-white text-xs font-bold flex items-center justify-center">{i + 1}</span>
-                <div>
-                  <p className="text-sm font-medium">{s.name}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Pickup {s.scheduled_pickup ?? "—"} · Dropoff {s.scheduled_dropoff ?? "—"}
-                  </p>
-                </div>
-              </div>
-              {s.lat && s.lng && (
-                <a
-                  href={`https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lng}#map=17/${s.lat}/${s.lng}`}
-                  target="_blank" rel="noreferrer"
-                  className="text-[11px] text-brand-navy underline"
-                >
-                  Open in map
-                </a>
-              )}
-            </li>
-          ))}
-        </ol>
+        {stopsQ.data && stopsQ.data.length > 0 && (
+          <SortableStops stops={stopsQ.data} routeId={routeId} isAdmin={isAdmin} />
+        )}
       </Card>
     </>
   );
@@ -296,5 +283,116 @@ function NewStopDialog({ routeId, nextSeq, onDone }: { routeId: string; nextSeq:
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function SortableStops({ stops, routeId, isAdmin }: { stops: any[]; routeId: string; isAdmin: boolean }) {
+  const qc = useQueryClient();
+  const [items, setItems] = useState(stops);
+  // keep local list synced when query refreshes
+  useEffect(() => { setItems(stops); }, [stops]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const reorder = useMutation({
+    mutationFn: async (next: any[]) => {
+      const updates = next.map((s, i) => ({ id: s.id, sequence: i + 1 }));
+      // Update sequences that actually changed
+      const changed = updates.filter((u) => {
+        const prev = stops.find((s) => s.id === u.id);
+        return prev && prev.sequence !== u.sequence;
+      });
+      await Promise.all(
+        changed.map((u) => supabase.from("stops").update({ sequence: u.sequence }).eq("id", u.id))
+      );
+    },
+    onSuccess: () => { toast.success("Order saved"); qc.invalidateQueries({ queryKey: ["stops", routeId] }); },
+    onError: (e: any) => { toast.error(e.message ?? "Failed to save order"); setItems(stops); },
+  });
+
+  const onDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIdx = items.findIndex((s) => s.id === active.id);
+    const newIdx = items.findIndex((s) => s.id === over.id);
+    const next = arrayMove(items, oldIdx, newIdx);
+    setItems(next);
+    reorder.mutate(next);
+  };
+
+  if (!isAdmin) {
+    return (
+      <ol className="divide-y divide-border">
+        {items.map((s, i) => <StopRow key={s.id} stop={s} index={i} />)}
+      </ol>
+    );
+  }
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <SortableContext items={items.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+        <ol className="divide-y divide-border">
+          {items.map((s, i) => <SortableStopRow key={s.id} stop={s} index={i} />)}
+        </ol>
+      </SortableContext>
+      {reorder.isPending && <p className="px-5 py-2 text-[11px] text-muted-foreground">Saving order…</p>}
+    </DndContext>
+  );
+}
+
+function StopRow({ stop, index, dragHandle }: { stop: any; index: number; dragHandle?: React.ReactNode }) {
+  return (
+    <li className="px-5 py-3 flex items-center justify-between bg-card">
+      <div className="flex items-center gap-3">
+        {dragHandle}
+        <span className="size-7 rounded-full bg-brand-navy text-white text-xs font-bold flex items-center justify-center">{index + 1}</span>
+        <div>
+          <p className="text-sm font-medium">{stop.name}</p>
+          <p className="text-[11px] text-muted-foreground">
+            Pickup {stop.scheduled_pickup ?? "—"} · Dropoff {stop.scheduled_dropoff ?? "—"}
+          </p>
+        </div>
+      </div>
+      {stop.lat && stop.lng && (
+        <a
+          href={`https://www.openstreetmap.org/?mlat=${stop.lat}&mlon=${stop.lng}#map=17/${stop.lat}/${stop.lng}`}
+          target="_blank" rel="noreferrer"
+          className="text-[11px] text-brand-navy underline"
+        >
+          Open in map
+        </a>
+      )}
+    </li>
+  );
+}
+
+function SortableStopRow({ stop, index }: { stop: any; index: number }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stop.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      <StopRow
+        stop={stop}
+        index={index}
+        dragHandle={
+          <button
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-muted-foreground hover:text-foreground touch-none"
+            aria-label="Drag to reorder"
+          >
+            <GripVertical className="size-4" />
+          </button>
+        }
+      />
+    </div>
   );
 }
