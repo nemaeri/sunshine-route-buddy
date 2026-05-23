@@ -12,6 +12,18 @@ import {
   Settings,
   LogOut,
   UserCog,
+  LayoutGrid,
+  CalendarDays,
+  PlaneTakeoff,
+  BookOpen,
+  CalendarRange,
+  Receipt,
+  CreditCard,
+  FileSpreadsheet,
+  PieChart,
+  Banknote,
+  BookUser,
+  BarChart3,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 
@@ -19,21 +31,60 @@ type NavItem = {
   to: string;
   label: string;
   icon: ComponentType<{ className?: string }>;
-  roles?: AppRole[]; // if undefined, show to all auth users
+  roles?: AppRole[];
 };
 
-const NAV: NavItem[] = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/students", label: "Student Directory", icon: GraduationCap, roles: ["admin", "teacher"] },
-  { to: "/classes", label: "Classes", icon: Users, roles: ["admin", "teacher"] },
-  { to: "/attendance", label: "Attendance", icon: ClipboardCheck, roles: ["admin", "teacher"] },
-  { to: "/exams", label: "Exams & Reports", icon: CalendarCheck2, roles: ["admin", "teacher", "parent"] },
-  { to: "/staff", label: "Staff Registry", icon: UserCog, roles: ["admin", "finance"] },
-  { to: "/finance", label: "Financial Records", icon: Wallet, roles: ["admin", "finance", "parent"] },
-  { to: "/bus", label: "Transport / Bus", icon: Bus },
-  { to: "/announcements", label: "Announcements", icon: Megaphone },
-  { to: "/my-children", label: "My Children", icon: GraduationCap, roles: ["parent"] },
-  { to: "/settings", label: "Settings", icon: Settings },
+type NavSection = { title: string; items: NavItem[] };
+
+const SECTIONS: NavSection[] = [
+  {
+    title: "Main",
+    items: [
+      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/students", label: "Students", icon: GraduationCap, roles: ["admin", "teacher"] },
+      { to: "/classes", label: "Classes & Streams", icon: Users, roles: ["admin", "teacher"] },
+      { to: "/attendance", label: "Attendance", icon: ClipboardCheck, roles: ["admin", "teacher"] },
+      { to: "/my-children", label: "My Children", icon: GraduationCap, roles: ["parent"] },
+      { to: "/staff-dashboard", label: "Staff dashboard", icon: LayoutGrid, roles: ["admin", "teacher", "finance"] },
+      { to: "/leave-requests", label: "Leave requests", icon: CalendarDays, roles: ["admin"] },
+      { to: "/my-leave", label: "My leave", icon: PlaneTakeoff, roles: ["admin", "teacher", "finance"] },
+    ],
+  },
+  {
+    title: "School",
+    items: [
+      { to: "/settings", label: "Settings", icon: Settings },
+      { to: "/bus", label: "Transport", icon: Bus },
+      { to: "/announcements", label: "Announcements", icon: Megaphone },
+    ],
+  },
+  {
+    title: "Academic",
+    items: [
+      { to: "/subjects", label: "Subjects", icon: BookOpen, roles: ["admin", "teacher"] },
+      { to: "/timetable", label: "Timetable", icon: CalendarRange, roles: ["admin", "teacher", "parent"] },
+      { to: "/exams", label: "Exams & Reports", icon: CalendarCheck2, roles: ["admin", "teacher", "parent"] },
+      { to: "/fee-structure", label: "Fee Structure", icon: Receipt, roles: ["admin", "finance"] },
+    ],
+  },
+  {
+    title: "Finance",
+    items: [
+      { to: "/finance", label: "Invoices", icon: Wallet, roles: ["admin", "finance", "parent"] },
+      { to: "/all-payments", label: "All payments", icon: CreditCard, roles: ["admin", "finance"] },
+      { to: "/financial-statement", label: "Financial statement", icon: FileSpreadsheet, roles: ["admin", "finance"] },
+      { to: "/finance-overview", label: "Finance Overview", icon: PieChart, roles: ["admin", "finance"] },
+      { to: "/payroll", label: "Payroll", icon: Banknote, roles: ["admin", "finance"] },
+      { to: "/staff", label: "Staff Registry", icon: UserCog, roles: ["admin", "finance"] },
+      { to: "/student-ledger", label: "Student Ledger", icon: BookUser, roles: ["admin", "finance", "parent"] },
+    ],
+  },
+  {
+    title: "Insights",
+    items: [
+      { to: "/reports", label: "Reports", icon: BarChart3, roles: ["admin", "teacher", "finance"] },
+    ],
+  },
 ];
 
 function termLabel() {
@@ -47,7 +98,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const { user, roles, signOut } = useAuth();
   const location = useRouterState({ select: (s) => s.location.pathname });
 
-  const items = NAV.filter((n) => !n.roles || n.roles.some((r) => roles.includes(r)));
+  const visibleSections = SECTIONS.map((s) => ({
+    ...s,
+    items: s.items.filter((n) => !n.roles || n.roles.some((r) => roles.includes(r))),
+  })).filter((s) => s.items.length > 0);
   const primaryRole = roles[0] ?? "user";
 
   return (
@@ -66,29 +120,38 @@ export default function AppShell({ children }: { children: ReactNode }) {
           </Link>
         </div>
 
-        <nav className="flex-1 px-4 py-2 space-y-1 overflow-y-auto">
-          {items.map((item) => {
-            const active = location === item.to || location.startsWith(item.to + "/");
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={`px-3 py-2 rounded-md flex items-center gap-3 text-sm transition-colors ${
-                  active
-                    ? "bg-white/10 text-white font-medium"
-                    : "text-white/70 hover:bg-white/5 hover:text-white"
-                }`}
-              >
-                {active ? (
-                  <span className="size-2 rounded-full bg-brand-gold" />
-                ) : (
-                  <Icon className="size-4 opacity-70" />
-                )}
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+        <nav className="flex-1 px-4 py-2 overflow-y-auto">
+          {visibleSections.map((section) => (
+            <div key={section.title} className="mb-4">
+              <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-white/40">
+                {section.title}
+              </p>
+              <div className="space-y-1">
+                {section.items.map((item) => {
+                  const active = location === item.to || location.startsWith(item.to + "/");
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      className={`px-3 py-2 rounded-md flex items-center gap-3 text-sm transition-colors ${
+                        active
+                          ? "bg-white/10 text-white font-medium"
+                          : "text-white/70 hover:bg-white/5 hover:text-white"
+                      }`}
+                    >
+                      {active ? (
+                        <span className="size-2 rounded-full bg-brand-gold" />
+                      ) : (
+                        <Icon className="size-4 opacity-70" />
+                      )}
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         <div className="p-4 border-t border-white/10 space-y-3">

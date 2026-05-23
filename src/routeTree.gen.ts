@@ -12,17 +12,29 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedTimetableRouteImport } from './routes/_authenticated/timetable'
+import { Route as AuthenticatedSubjectsRouteImport } from './routes/_authenticated/subjects'
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
+import { Route as AuthenticatedStudentLedgerRouteImport } from './routes/_authenticated/student-ledger'
+import { Route as AuthenticatedStaffDashboardRouteImport } from './routes/_authenticated/staff-dashboard'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedPayrollRouteImport } from './routes/_authenticated/payroll'
+import { Route as AuthenticatedMyLeaveRouteImport } from './routes/_authenticated/my-leave'
 import { Route as AuthenticatedMyChildrenRouteImport } from './routes/_authenticated/my-children'
+import { Route as AuthenticatedLeaveRequestsRouteImport } from './routes/_authenticated/leave-requests'
+import { Route as AuthenticatedFinancialStatementRouteImport } from './routes/_authenticated/financial-statement'
+import { Route as AuthenticatedFinanceOverviewRouteImport } from './routes/_authenticated/finance-overview'
 import { Route as AuthenticatedFinanceRouteImport } from './routes/_authenticated/finance'
+import { Route as AuthenticatedFeeStructureRouteImport } from './routes/_authenticated/fee-structure'
 import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/exams'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedClassesRouteImport } from './routes/_authenticated/classes'
 import { Route as AuthenticatedBusRouteImport } from './routes/_authenticated/bus'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
 import { Route as AuthenticatedAnnouncementsRouteImport } from './routes/_authenticated/announcements'
+import { Route as AuthenticatedAllPaymentsRouteImport } from './routes/_authenticated/all-payments'
 import { Route as AuthenticatedPageRouteImport } from './routes/_authenticated/$page'
 
 const AuthRoute = AuthRouteImport.update({
@@ -39,11 +51,33 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedTimetableRoute = AuthenticatedTimetableRouteImport.update({
+  id: '/timetable',
+  path: '/timetable',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSubjectsRoute = AuthenticatedSubjectsRouteImport.update({
+  id: '/subjects',
+  path: '/subjects',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedStudentsRoute = AuthenticatedStudentsRouteImport.update({
   id: '/students',
   path: '/students',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedStudentLedgerRoute =
+  AuthenticatedStudentLedgerRouteImport.update({
+    id: '/student-ledger',
+    path: '/student-ledger',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedStaffDashboardRoute =
+  AuthenticatedStaffDashboardRouteImport.update({
+    id: '/staff-dashboard',
+    path: '/staff-dashboard',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedStaffRoute = AuthenticatedStaffRouteImport.update({
   id: '/staff',
   path: '/staff',
@@ -54,16 +88,55 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPayrollRoute = AuthenticatedPayrollRouteImport.update({
+  id: '/payroll',
+  path: '/payroll',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedMyLeaveRoute = AuthenticatedMyLeaveRouteImport.update({
+  id: '/my-leave',
+  path: '/my-leave',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedMyChildrenRoute = AuthenticatedMyChildrenRouteImport.update({
   id: '/my-children',
   path: '/my-children',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedLeaveRequestsRoute =
+  AuthenticatedLeaveRequestsRouteImport.update({
+    id: '/leave-requests',
+    path: '/leave-requests',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedFinancialStatementRoute =
+  AuthenticatedFinancialStatementRouteImport.update({
+    id: '/financial-statement',
+    path: '/financial-statement',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedFinanceOverviewRoute =
+  AuthenticatedFinanceOverviewRouteImport.update({
+    id: '/finance-overview',
+    path: '/finance-overview',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedFinanceRoute = AuthenticatedFinanceRouteImport.update({
   id: '/finance',
   path: '/finance',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedFeeStructureRoute =
+  AuthenticatedFeeStructureRouteImport.update({
+    id: '/fee-structure',
+    path: '/fee-structure',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedExamsRoute = AuthenticatedExamsRouteImport.update({
   id: '/exams',
   path: '/exams',
@@ -95,6 +168,12 @@ const AuthenticatedAnnouncementsRoute =
     path: '/announcements',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAllPaymentsRoute =
+  AuthenticatedAllPaymentsRouteImport.update({
+    id: '/all-payments',
+    path: '/all-payments',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPageRoute = AuthenticatedPageRouteImport.update({
   id: '/$page',
   path: '/$page',
@@ -105,33 +184,57 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/$page': typeof AuthenticatedPageRoute
+  '/all-payments': typeof AuthenticatedAllPaymentsRoute
   '/announcements': typeof AuthenticatedAnnouncementsRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/bus': typeof AuthenticatedBusRoute
   '/classes': typeof AuthenticatedClassesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/exams': typeof AuthenticatedExamsRoute
+  '/fee-structure': typeof AuthenticatedFeeStructureRoute
   '/finance': typeof AuthenticatedFinanceRoute
+  '/finance-overview': typeof AuthenticatedFinanceOverviewRoute
+  '/financial-statement': typeof AuthenticatedFinancialStatementRoute
+  '/leave-requests': typeof AuthenticatedLeaveRequestsRoute
   '/my-children': typeof AuthenticatedMyChildrenRoute
+  '/my-leave': typeof AuthenticatedMyLeaveRoute
+  '/payroll': typeof AuthenticatedPayrollRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
+  '/staff-dashboard': typeof AuthenticatedStaffDashboardRoute
+  '/student-ledger': typeof AuthenticatedStudentLedgerRoute
   '/students': typeof AuthenticatedStudentsRoute
+  '/subjects': typeof AuthenticatedSubjectsRoute
+  '/timetable': typeof AuthenticatedTimetableRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/$page': typeof AuthenticatedPageRoute
+  '/all-payments': typeof AuthenticatedAllPaymentsRoute
   '/announcements': typeof AuthenticatedAnnouncementsRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/bus': typeof AuthenticatedBusRoute
   '/classes': typeof AuthenticatedClassesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/exams': typeof AuthenticatedExamsRoute
+  '/fee-structure': typeof AuthenticatedFeeStructureRoute
   '/finance': typeof AuthenticatedFinanceRoute
+  '/finance-overview': typeof AuthenticatedFinanceOverviewRoute
+  '/financial-statement': typeof AuthenticatedFinancialStatementRoute
+  '/leave-requests': typeof AuthenticatedLeaveRequestsRoute
   '/my-children': typeof AuthenticatedMyChildrenRoute
+  '/my-leave': typeof AuthenticatedMyLeaveRoute
+  '/payroll': typeof AuthenticatedPayrollRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
+  '/staff-dashboard': typeof AuthenticatedStaffDashboardRoute
+  '/student-ledger': typeof AuthenticatedStudentLedgerRoute
   '/students': typeof AuthenticatedStudentsRoute
+  '/subjects': typeof AuthenticatedSubjectsRoute
+  '/timetable': typeof AuthenticatedTimetableRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -139,17 +242,29 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/$page': typeof AuthenticatedPageRoute
+  '/_authenticated/all-payments': typeof AuthenticatedAllPaymentsRoute
   '/_authenticated/announcements': typeof AuthenticatedAnnouncementsRoute
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
   '/_authenticated/bus': typeof AuthenticatedBusRoute
   '/_authenticated/classes': typeof AuthenticatedClassesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/exams': typeof AuthenticatedExamsRoute
+  '/_authenticated/fee-structure': typeof AuthenticatedFeeStructureRoute
   '/_authenticated/finance': typeof AuthenticatedFinanceRoute
+  '/_authenticated/finance-overview': typeof AuthenticatedFinanceOverviewRoute
+  '/_authenticated/financial-statement': typeof AuthenticatedFinancialStatementRoute
+  '/_authenticated/leave-requests': typeof AuthenticatedLeaveRequestsRoute
   '/_authenticated/my-children': typeof AuthenticatedMyChildrenRoute
+  '/_authenticated/my-leave': typeof AuthenticatedMyLeaveRoute
+  '/_authenticated/payroll': typeof AuthenticatedPayrollRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
+  '/_authenticated/staff-dashboard': typeof AuthenticatedStaffDashboardRoute
+  '/_authenticated/student-ledger': typeof AuthenticatedStudentLedgerRoute
   '/_authenticated/students': typeof AuthenticatedStudentsRoute
+  '/_authenticated/subjects': typeof AuthenticatedSubjectsRoute
+  '/_authenticated/timetable': typeof AuthenticatedTimetableRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -157,50 +272,86 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/$page'
+    | '/all-payments'
     | '/announcements'
     | '/attendance'
     | '/bus'
     | '/classes'
     | '/dashboard'
     | '/exams'
+    | '/fee-structure'
     | '/finance'
+    | '/finance-overview'
+    | '/financial-statement'
+    | '/leave-requests'
     | '/my-children'
+    | '/my-leave'
+    | '/payroll'
+    | '/reports'
     | '/settings'
     | '/staff'
+    | '/staff-dashboard'
+    | '/student-ledger'
     | '/students'
+    | '/subjects'
+    | '/timetable'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/$page'
+    | '/all-payments'
     | '/announcements'
     | '/attendance'
     | '/bus'
     | '/classes'
     | '/dashboard'
     | '/exams'
+    | '/fee-structure'
     | '/finance'
+    | '/finance-overview'
+    | '/financial-statement'
+    | '/leave-requests'
     | '/my-children'
+    | '/my-leave'
+    | '/payroll'
+    | '/reports'
     | '/settings'
     | '/staff'
+    | '/staff-dashboard'
+    | '/student-ledger'
     | '/students'
+    | '/subjects'
+    | '/timetable'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/$page'
+    | '/_authenticated/all-payments'
     | '/_authenticated/announcements'
     | '/_authenticated/attendance'
     | '/_authenticated/bus'
     | '/_authenticated/classes'
     | '/_authenticated/dashboard'
     | '/_authenticated/exams'
+    | '/_authenticated/fee-structure'
     | '/_authenticated/finance'
+    | '/_authenticated/finance-overview'
+    | '/_authenticated/financial-statement'
+    | '/_authenticated/leave-requests'
     | '/_authenticated/my-children'
+    | '/_authenticated/my-leave'
+    | '/_authenticated/payroll'
+    | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/staff'
+    | '/_authenticated/staff-dashboard'
+    | '/_authenticated/student-ledger'
     | '/_authenticated/students'
+    | '/_authenticated/subjects'
+    | '/_authenticated/timetable'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -232,11 +383,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/timetable': {
+      id: '/_authenticated/timetable'
+      path: '/timetable'
+      fullPath: '/timetable'
+      preLoaderRoute: typeof AuthenticatedTimetableRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/subjects': {
+      id: '/_authenticated/subjects'
+      path: '/subjects'
+      fullPath: '/subjects'
+      preLoaderRoute: typeof AuthenticatedSubjectsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/students': {
       id: '/_authenticated/students'
       path: '/students'
       fullPath: '/students'
       preLoaderRoute: typeof AuthenticatedStudentsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/student-ledger': {
+      id: '/_authenticated/student-ledger'
+      path: '/student-ledger'
+      fullPath: '/student-ledger'
+      preLoaderRoute: typeof AuthenticatedStudentLedgerRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/staff-dashboard': {
+      id: '/_authenticated/staff-dashboard'
+      path: '/staff-dashboard'
+      fullPath: '/staff-dashboard'
+      preLoaderRoute: typeof AuthenticatedStaffDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/staff': {
@@ -253,6 +432,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/payroll': {
+      id: '/_authenticated/payroll'
+      path: '/payroll'
+      fullPath: '/payroll'
+      preLoaderRoute: typeof AuthenticatedPayrollRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/my-leave': {
+      id: '/_authenticated/my-leave'
+      path: '/my-leave'
+      fullPath: '/my-leave'
+      preLoaderRoute: typeof AuthenticatedMyLeaveRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/my-children': {
       id: '/_authenticated/my-children'
       path: '/my-children'
@@ -260,11 +460,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyChildrenRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/leave-requests': {
+      id: '/_authenticated/leave-requests'
+      path: '/leave-requests'
+      fullPath: '/leave-requests'
+      preLoaderRoute: typeof AuthenticatedLeaveRequestsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/financial-statement': {
+      id: '/_authenticated/financial-statement'
+      path: '/financial-statement'
+      fullPath: '/financial-statement'
+      preLoaderRoute: typeof AuthenticatedFinancialStatementRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/finance-overview': {
+      id: '/_authenticated/finance-overview'
+      path: '/finance-overview'
+      fullPath: '/finance-overview'
+      preLoaderRoute: typeof AuthenticatedFinanceOverviewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/finance': {
       id: '/_authenticated/finance'
       path: '/finance'
       fullPath: '/finance'
       preLoaderRoute: typeof AuthenticatedFinanceRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/fee-structure': {
+      id: '/_authenticated/fee-structure'
+      path: '/fee-structure'
+      fullPath: '/fee-structure'
+      preLoaderRoute: typeof AuthenticatedFeeStructureRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/exams': {
@@ -309,6 +537,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnnouncementsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/all-payments': {
+      id: '/_authenticated/all-payments'
+      path: '/all-payments'
+      fullPath: '/all-payments'
+      preLoaderRoute: typeof AuthenticatedAllPaymentsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/$page': {
       id: '/_authenticated/$page'
       path: '/$page'
@@ -321,32 +556,56 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedPageRoute: typeof AuthenticatedPageRoute
+  AuthenticatedAllPaymentsRoute: typeof AuthenticatedAllPaymentsRoute
   AuthenticatedAnnouncementsRoute: typeof AuthenticatedAnnouncementsRoute
   AuthenticatedAttendanceRoute: typeof AuthenticatedAttendanceRoute
   AuthenticatedBusRoute: typeof AuthenticatedBusRoute
   AuthenticatedClassesRoute: typeof AuthenticatedClassesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedExamsRoute: typeof AuthenticatedExamsRoute
+  AuthenticatedFeeStructureRoute: typeof AuthenticatedFeeStructureRoute
   AuthenticatedFinanceRoute: typeof AuthenticatedFinanceRoute
+  AuthenticatedFinanceOverviewRoute: typeof AuthenticatedFinanceOverviewRoute
+  AuthenticatedFinancialStatementRoute: typeof AuthenticatedFinancialStatementRoute
+  AuthenticatedLeaveRequestsRoute: typeof AuthenticatedLeaveRequestsRoute
   AuthenticatedMyChildrenRoute: typeof AuthenticatedMyChildrenRoute
+  AuthenticatedMyLeaveRoute: typeof AuthenticatedMyLeaveRoute
+  AuthenticatedPayrollRoute: typeof AuthenticatedPayrollRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
+  AuthenticatedStaffDashboardRoute: typeof AuthenticatedStaffDashboardRoute
+  AuthenticatedStudentLedgerRoute: typeof AuthenticatedStudentLedgerRoute
   AuthenticatedStudentsRoute: typeof AuthenticatedStudentsRoute
+  AuthenticatedSubjectsRoute: typeof AuthenticatedSubjectsRoute
+  AuthenticatedTimetableRoute: typeof AuthenticatedTimetableRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPageRoute: AuthenticatedPageRoute,
+  AuthenticatedAllPaymentsRoute: AuthenticatedAllPaymentsRoute,
   AuthenticatedAnnouncementsRoute: AuthenticatedAnnouncementsRoute,
   AuthenticatedAttendanceRoute: AuthenticatedAttendanceRoute,
   AuthenticatedBusRoute: AuthenticatedBusRoute,
   AuthenticatedClassesRoute: AuthenticatedClassesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedExamsRoute: AuthenticatedExamsRoute,
+  AuthenticatedFeeStructureRoute: AuthenticatedFeeStructureRoute,
   AuthenticatedFinanceRoute: AuthenticatedFinanceRoute,
+  AuthenticatedFinanceOverviewRoute: AuthenticatedFinanceOverviewRoute,
+  AuthenticatedFinancialStatementRoute: AuthenticatedFinancialStatementRoute,
+  AuthenticatedLeaveRequestsRoute: AuthenticatedLeaveRequestsRoute,
   AuthenticatedMyChildrenRoute: AuthenticatedMyChildrenRoute,
+  AuthenticatedMyLeaveRoute: AuthenticatedMyLeaveRoute,
+  AuthenticatedPayrollRoute: AuthenticatedPayrollRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
+  AuthenticatedStaffDashboardRoute: AuthenticatedStaffDashboardRoute,
+  AuthenticatedStudentLedgerRoute: AuthenticatedStudentLedgerRoute,
   AuthenticatedStudentsRoute: AuthenticatedStudentsRoute,
+  AuthenticatedSubjectsRoute: AuthenticatedSubjectsRoute,
+  AuthenticatedTimetableRoute: AuthenticatedTimetableRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
