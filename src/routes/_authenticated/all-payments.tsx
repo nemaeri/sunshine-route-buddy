@@ -37,6 +37,7 @@ function receiptNo(p: { paid_on: string; created_at: string; id: string }) {
 function AllPaymentsPage() {
   const { roles, user } = useAuth();
   const canManage = roles.includes("admin") || roles.includes("finance");
+  const qc = useQueryClient();
   const [receiptId, setReceiptId] = useState<string | null>(null);
 
   // Default date range: this month
