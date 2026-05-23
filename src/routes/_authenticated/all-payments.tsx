@@ -177,6 +177,7 @@ function AllPaymentsPage() {
             <Button variant="outline" onClick={exportCsv}><Download className="size-4 mr-1" /> Export CSV</Button>
             {canManage && <CsvTemplateButton />}
             {canManage && <BulkImportDialog onDone={() => qc.invalidateQueries({ queryKey: ["all-payments"] })} userId={user?.id ?? null} />}
+            {canManage && <RecordPaymentDialog onDone={() => qc.invalidateQueries({ queryKey: ["all-payments"] })} userId={user?.id ?? null} />}
           </div>
         }
       />
