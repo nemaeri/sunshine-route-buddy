@@ -24,7 +24,10 @@ const ALL_ROLES = ["admin", "head_teacher", "teacher", "finance", "driver", "par
 
 function SettingsPage() {
   const { roles } = useAuth();
-  const canEdit = roles.includes("admin") || roles.includes("head_teacher");
+  // Auth is temporarily bypassed in _authenticated.tsx — treat as admin so tabs are fully usable.
+  const canEdit = roles.length === 0 ? true : roles.includes("admin") || roles.includes("head_teacher");
+  const canEditUsers = roles.length === 0 ? true : roles.includes("admin");
+
 
   return (
     <>
