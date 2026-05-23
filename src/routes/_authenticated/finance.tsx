@@ -64,7 +64,7 @@ function FinancePage() {
         title="Financial Records"
         description="Fee invoices, payments, and outstanding balances"
         actions={canManage ? (
-          <NewInvoiceDialog onDone={() => qc.invalidateQueries({ queryKey: ["invoices"] })} />
+          <NewInvoiceDialog onDone={() => { qc.invalidateQueries({ queryKey: ["invoices"] }); qc.invalidateQueries({ queryKey: ["fin-overview"] }); }} />
         ) : null}
       />
 
@@ -123,6 +123,8 @@ function InvoiceRow({ invoice, canManage, userId }: { invoice: any; canManage: b
       toast.success("Payment recorded");
       setOpen(false); setAmount(""); setReference("");
       qc.invalidateQueries({ queryKey: ["invoices"] });
+      qc.invalidateQueries({ queryKey: ["all-payments"] });
+      qc.invalidateQueries({ queryKey: ["fin-overview"] });
     },
     onError: (e: any) => toast.error(e.message ?? "Failed"),
   });
