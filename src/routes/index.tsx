@@ -1,10 +1,12 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { useAuth } from "@/hooks/useAuth";
-import { GraduationCap, Bus, ClipboardCheck, Wallet } from "lucide-react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
-  component: Landing,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard" });
+  },
+  component: () => null,
 });
+
 
 function Landing() {
   const { user, loading } = useAuth();
