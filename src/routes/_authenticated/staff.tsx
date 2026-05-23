@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, Card } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -10,55 +10,40 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
-import { Plus, UserCog, Banknote } from "lucide-react";
+import {
+  Plus, Search, UserPlus, Users, Calculator, Headphones, Ban, Pencil, Pause, Play, Save,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/staff")({
   component: StaffPage,
-  head: () => ({ meta: [{ title: "Staff & Payroll — JEC" }] }),
+  head: () => ({ meta: [{ title: "Staff Dashboard — JEC" }] }),
 });
 
-function kes(n: number) {
-  return new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(n || 0);
-}
+const ROLES = ["Teacher", "Accountant", "Support Staff", "Deputy Head", "Head Teacher"] as const;
+type Role = (typeof ROLES)[number];
 
-// Simplified Kenyan PAYE 2024+ bands (monthly)
-function calcPAYE(taxable: number): number {
-  let tax = 0;
-  const bands = [
-    { upTo: 24000, rate: 0.10 },
-    { upTo: 32333, rate: 0.25 },
-    { upTo: 500000, rate: 0.30 },
-    { upTo: 800000, rate: 0.325 },
-    { upTo: Infinity, rate: 0.35 },
-  ];
-  let prev = 0;
-  for (const b of bands) {
-    if (taxable <= prev) break;
-    const slice = Math.min(taxable, b.upTo) - prev;
-    if (slice > 0) tax += slice * b.rate;
-    prev = b.upTo;
-  }
-  // Personal relief
-  return Math.max(0, tax - 2400);
-}
-function calcNHIF(gross: number) {
-  // simplified SHIF: 2.75% of gross, min 300
-  return Math.max(300, Math.round(gross * 0.0275));
-}
-function calcNSSF(gross: number) {
-  // Tier I + II cap KES 4320 (employee)
-  return Math.min(Math.round(gross * 0.06), 4320);
-}
-function calcHousingLevy(gross: number) {
-  return Math.round(gross * 0.015);
+const SUBJECTS = [
+  "Agriculture", "CRE / IRE", "Creative Arts", "English", "Kiswahili",
+  "Mathematics", "Physical & Health Education", "Science & Technology", "Social Studies",
+];
+
+const SUPPORT_JOBS = [
+  "Cleaner", "Cook", "Security Guard", "Groundskeeper",
+  "Driver", "Bus Matron", "Nurse", "Receptionist", "Storekeeper", "Other",
+];
+
+function roleBucket(designation: string | null | undefined): "teacher" | "accountant" | "support" | "admin" {
+  const d = (designation ?? "").toLowerCase();
+  if (d.includes("teacher") || d.includes("head")) return "teacher";
+  if (d.includes("accountant") || d.includes("finance")) return "accountant";
+  if (d.includes("admin")) return "admin";
+  return "support";
 }
 
 function StaffPage() {
-  const { roles, user } = useAuth();
-  const isAdmin = roles.includes("admin");
-  const isFinance = roles.includes("finance") || isAdmin;
   const qc = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [tab, setTab] = useState<"all" | "teachers" | "accounts" | "support">("all");
 
   const staffQ = useQuery({
     queryKey: ["staff"],
@@ -69,195 +54,429 @@ function StaffPage() {
     },
   });
 
+  const stats = useMemo(() => {
+    const all = staffQ.data ?? [];
+    const teachers = all.filter((s: any) => roleBucket(s.designation) === "teacher").length;
+    const accountants = all.filter((s: any) => roleBucket(s.designation) === "accountant").length;
+    const support = all.filter((s: any) => roleBucket(s.designation) === "support").length;
+    const suspended = all.filter((s: any) => !s.active).length;
+    return { teachers, accountants, support, suspended };
+  }, [staffQ.data]);
+
+  const filtered = useMemo(() => {
+    let rows = staffQ.data ?? [];
+    if (tab === "teachers") rows = rows.filter((s: any) => roleBucket(s.designation) === "teacher");
+    if (tab === "accounts") rows = rows.filter((s: any) => roleBucket(s.designation) === "accountant");
+    if (tab === "support") rows = rows.filter((s: any) => roleBucket(s.designation) === "support");
+    if (search) {
+      const q = search.toLowerCase();
+      rows = rows.filter((s: any) =>
+        `${s.first_name} ${s.last_name}`.toLowerCase().includes(q) ||
+        (s.email ?? "").toLowerCase().includes(q) ||
+        (s.phone ?? "").toLowerCase().includes(q) ||
+        (s.designation ?? "").toLowerCase().includes(q),
+      );
+    }
+    return rows;
+  }, [staffQ.data, tab, search]);
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["staff"] });
+
   return (
     <>
       <PageHeader
-        title="Staff & Payroll"
-        description="Staff registry and KRA-compliant payroll computation"
-        actions={isAdmin ? <NewStaffDialog onDone={() => qc.invalidateQueries({ queryKey: ["staff"] })} /> : null}
+        title="Staff dashboard"
+        description="Browse staff, open profiles, and manage teaching assignments"
+        actions={
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                placeholder="Search…"
+                className="pl-9 w-64"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <NewStaffDialog onDone={invalidate} />
+          </div>
+        }
       />
 
-      <div className="grid grid-cols-12 gap-6">
-        <Card className="col-span-12 lg:col-span-7 overflow-hidden">
-          <div className="px-5 py-3 border-b border-border bg-secondary/30 flex items-center gap-2">
-            <UserCog className="size-4" />
-            <h3 className="font-display font-bold text-sm">Staff registry</h3>
-          </div>
-          {staffQ.isLoading && <p className="p-6 text-sm text-muted-foreground">Loading…</p>}
-          {staffQ.data?.length === 0 && <p className="p-8 text-center text-sm text-muted-foreground">No staff yet.</p>}
-          <ul className="divide-y divide-border">
-            {staffQ.data?.map((s: any) => (
-              <li key={s.id} className="px-5 py-3 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">{s.first_name} {s.last_name}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {s.designation ?? "—"} · {s.department ?? "—"} · {s.staff_no}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold">{kes(Number(s.basic_salary ?? 0))}</p>
-                  <p className="text-[10px] text-muted-foreground">basic</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Card>
-
-        <div className="col-span-12 lg:col-span-5">
-          {isFinance ? (
-            <PayrollPanel userId={user?.id ?? null} />
-          ) : (
-            <Card className="p-6 text-sm text-muted-foreground">Finance role required to run payroll.</Card>
-          )}
-        </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <StatCard icon={<Users className="size-5" />} value={String(stats.teachers)} label="Teachers" tone="blue" />
+        <StatCard icon={<Calculator className="size-5" />} value={String(stats.accountants)} label="Accountants" tone="amber" />
+        <StatCard icon={<Headphones className="size-5" />} value={String(stats.support)} label="Support" tone="violet" />
+        <StatCard icon={<Ban className="size-5" />} value={String(stats.suspended)} label="Suspended" tone="rose" />
       </div>
+
+      <Card>
+        <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-4 flex-wrap">
+          <h3 className="font-display font-bold flex items-center gap-2">
+            Staff
+            <span className="inline-flex items-center justify-center min-w-6 h-6 px-2 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+              {staffQ.data?.length ?? 0}
+            </span>
+          </h3>
+          <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-md">
+            {([
+              ["all", "All"], ["teachers", "Teachers"], ["accounts", "Accounts"], ["support", "Support"],
+            ] as const).map(([k, lbl]) => (
+              <button
+                key={k}
+                onClick={() => setTab(k)}
+                className={`px-4 py-1.5 rounded text-sm transition-colors ${tab === k ? "bg-primary text-primary-foreground" : "hover:bg-background"}`}
+              >
+                {lbl}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border">
+                <th className="text-left font-medium px-5 py-3">Name</th>
+                <th className="text-left font-medium px-5 py-3">Role</th>
+                <th className="text-left font-medium px-5 py-3">Email</th>
+                <th className="text-left font-medium px-5 py-3">Phone</th>
+                <th className="text-left font-medium px-5 py-3">Status</th>
+                <th className="px-5 py-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {staffQ.isLoading && <tr><td colSpan={6} className="px-5 py-10 text-center text-muted-foreground">Loading…</td></tr>}
+              {!staffQ.isLoading && filtered.length === 0 && (
+                <tr><td colSpan={6} className="px-5 py-10 text-center text-muted-foreground">No staff in this view.</td></tr>
+              )}
+              {filtered.map((s: any) => (
+                <tr key={s.id} className="border-b border-border last:border-0 hover:bg-muted/30">
+                  <td className="px-5 py-4 font-medium">{s.first_name} {s.last_name}</td>
+                  <td className="px-5 py-4">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
+                      {s.designation || "—"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4 text-muted-foreground">{s.email || "—"}</td>
+                  <td className="px-5 py-4 text-muted-foreground">{s.phone || "—"}</td>
+                  <td className="px-5 py-4">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${s.active ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-amber-50 text-amber-700 border-amber-100"}`}>
+                      {s.active ? "active" : "suspended"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center justify-end gap-2">
+                      <EditStaffDialog staff={s} onDone={invalidate} />
+                      <button
+                        title={s.active ? "Suspend" : "Reactivate"}
+                        onClick={async () => {
+                          const { error } = await supabase.from("staff").update({ active: !s.active }).eq("id", s.id);
+                          if (error) toast.error(error.message); else { toast.success(s.active ? "Suspended" : "Reactivated"); invalidate(); }
+                        }}
+                        className={`size-8 inline-flex items-center justify-center rounded-md border ${s.active ? "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100" : "bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100"}`}
+                      >
+                        {s.active ? <Pause className="size-4" /> : <Play className="size-4" />}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </>
   );
 }
 
-function PayrollPanel({ userId }: { userId: string | null }) {
-  const qc = useQueryClient();
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
-
-  const runsQ = useQuery({
-    queryKey: ["payroll_runs"],
-    queryFn: async () => (await supabase.from("payroll_runs").select("*").order("period_year", { ascending: false }).order("period_month", { ascending: false })).data ?? [],
-  });
-
-  const run = useMutation({
-    mutationFn: async () => {
-      const { data: existing } = await supabase.from("payroll_runs").select("id").eq("period_year", year).eq("period_month", month).maybeSingle();
-      let runId = existing?.id;
-      if (!runId) {
-        const { data, error } = await supabase.from("payroll_runs")
-          .insert({ period_year: year, period_month: month, status: "processed", created_by: userId })
-          .select("id").single();
-        if (error) throw error;
-        runId = data.id;
-      } else {
-        await supabase.from("payslips").delete().eq("payroll_run_id", runId);
-      }
-
-      const { data: staff } = await supabase.from("staff").select("id, basic_salary").eq("active", true);
-      const rows = (staff ?? []).map((s: any) => {
-        const basic = Number(s.basic_salary ?? 0);
-        const allowances = 0;
-        const gross = basic + allowances;
-        const nssf = calcNSSF(gross);
-        const nhif = calcNHIF(gross);
-        const housing = calcHousingLevy(gross);
-        const taxable = Math.max(0, gross - nssf - housing);
-        const paye = calcPAYE(taxable);
-        const net = gross - nssf - nhif - housing - paye;
-        return {
-          payroll_run_id: runId,
-          staff_id: s.id,
-          basic_salary: basic,
-          allowances,
-          gross_pay: gross,
-          paye,
-          nhif,
-          nssf,
-          housing_levy: housing,
-          other_deductions: 0,
-          net_pay: net,
-        };
-      });
-      if (rows.length === 0) throw new Error("No active staff to run payroll for");
-      const { error } = await supabase.from("payslips").insert(rows);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Payroll processed");
-      qc.invalidateQueries({ queryKey: ["payroll_runs"] });
-    },
-    onError: (e: any) => toast.error(e.message ?? "Failed"),
-  });
-
+function StatCard({
+  icon, value, label, tone,
+}: { icon: React.ReactNode; value: string; label: string; tone: "blue" | "amber" | "violet" | "rose" }) {
+  const tones: Record<string, string> = {
+    blue: "bg-blue-100 text-blue-600",
+    amber: "bg-amber-100 text-amber-600",
+    violet: "bg-violet-100 text-violet-600",
+    rose: "bg-rose-100 text-rose-600",
+  };
   return (
-    <Card className="overflow-hidden">
-      <div className="px-5 py-3 border-b border-border bg-secondary/30 flex items-center gap-2">
-        <Banknote className="size-4" />
-        <h3 className="font-display font-bold text-sm">Run payroll</h3>
-      </div>
-      <div className="p-5 space-y-3">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label>Year</Label>
-            <Input type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} />
-          </div>
-          <div>
-            <Label>Month</Label>
-            <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                <option key={m} value={m}>{new Date(2000, m - 1, 1).toLocaleString("en", { month: "long" })}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <Button onClick={() => run.mutate()} disabled={run.isPending} className="w-full">
-          {run.isPending ? "Processing…" : "Process payroll"}
-        </Button>
-        <p className="text-[10px] text-muted-foreground">
-          Computes PAYE (KRA bands), SHIF 2.75%, NSSF tiers, and 1.5% housing levy. Personal relief KES 2,400 applied.
-        </p>
-      </div>
-      <div className="px-5 py-3 border-t border-border bg-secondary/20">
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Past runs</p>
-        {runsQ.data?.length === 0 && <p className="text-xs text-muted-foreground">No runs yet.</p>}
-        <ul className="space-y-1">
-          {runsQ.data?.map((r: any) => (
-            <li key={r.id} className="text-xs flex justify-between">
-              <span>{new Date(r.period_year, r.period_month - 1).toLocaleString("en", { month: "long", year: "numeric" })}</span>
-              <span className="text-emerald-700 font-bold">{r.status}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+    <Card className="p-5">
+      <div className={`inline-flex items-center justify-center size-10 rounded-lg ${tones[tone]} mb-4`}>{icon}</div>
+      <div className="font-display font-bold text-3xl text-foreground">{value}</div>
+      <div className="text-sm text-muted-foreground mt-1">{label}</div>
     </Card>
   );
 }
 
+type StaffForm = {
+  first_name: string;
+  last_name: string;
+  role: Role;
+  phone: string;
+  email: string;
+  subjects: string[];
+  assigned_classes: string[];
+  national_id: string;
+  support_job: string;
+  support_job_other: string;
+};
+
+const emptyForm: StaffForm = {
+  first_name: "", last_name: "", role: "Teacher", phone: "", email: "",
+  subjects: [], assigned_classes: [], national_id: "", support_job: "Cleaner", support_job_other: "",
+};
+
+function StaffFormFields({ form, setForm, classes }: {
+  form: StaffForm; setForm: (f: StaffForm) => void; classes: Array<{ id: string; name: string }>;
+}) {
+  const isTeacher = form.role === "Teacher" || form.role === "Deputy Head" || form.role === "Head Teacher";
+  const isSupport = form.role === "Support Staff";
+
+  return (
+    <div className="space-y-5 pt-2">
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label>First Name</Label>
+          <Input className="mt-1.5" placeholder="e.g. Mary" value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
+        </div>
+        <div>
+          <Label>Last Name</Label>
+          <Input className="mt-1.5" placeholder="e.g. Njeri" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label>Role</Label>
+          <select
+            className="mt-1.5 w-full h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            value={form.role}
+            onChange={(e) => setForm({ ...form, role: e.target.value as Role })}
+          >
+            {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
+        <div>
+          <Label>Phone Number</Label>
+          <Input className="mt-1.5" placeholder="07XX XXX XXX" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+        </div>
+      </div>
+
+      <div>
+        <Label>Email (login)</Label>
+        <Input className="mt-1.5" type="email" placeholder="name@school.ke" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+      </div>
+
+      {isSupport && (
+        <div>
+          <Label>Support Job</Label>
+          <select
+            className="mt-1.5 w-full h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            value={form.support_job}
+            onChange={(e) => setForm({ ...form, support_job: e.target.value })}
+          >
+            {SUPPORT_JOBS.map((j) => <option key={j}>{j}</option>)}
+          </select>
+          {form.support_job === "Other" && (
+            <Input
+              className="mt-2"
+              placeholder="Specify the support role (e.g. Gardener, IT Technician)"
+              value={form.support_job_other}
+              onChange={(e) => setForm({ ...form, support_job_other: e.target.value })}
+            />
+          )}
+          <p className="text-xs text-muted-foreground mt-1.5">Pick the specific job this support staff handles day-to-day.</p>
+        </div>
+      )}
+
+      {isTeacher && (
+        <>
+          <div>
+            <Label>Subjects Teaching</Label>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              {SUBJECTS.map((sub) => {
+                const active = form.subjects.includes(sub);
+                return (
+                  <button
+                    key={sub}
+                    type="button"
+                    onClick={() => setForm({
+                      ...form,
+                      subjects: active ? form.subjects.filter((x) => x !== sub) : [...form.subjects, sub],
+                    })}
+                    className={`px-3 py-1.5 rounded-md border text-sm transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "bg-background border-input hover:bg-muted"}`}
+                  >
+                    {sub}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1.5">Selections are for your records; directory sync can be added later.</p>
+          </div>
+
+          <div>
+            <Label>Assign Class / Stream</Label>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              {classes.length === 0 && <p className="text-xs text-muted-foreground">No classes yet — add one on the Classes & Streams tab.</p>}
+              {classes.map((c) => {
+                const active = form.assigned_classes.includes(c.id);
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setForm({
+                      ...form,
+                      assigned_classes: active ? form.assigned_classes.filter((x) => x !== c.id) : [...form.assigned_classes, c.id],
+                    })}
+                    className={`px-3 py-1.5 rounded-md border text-sm transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "bg-background border-input hover:bg-muted"}`}
+                  >
+                    {c.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+
+      <div>
+        <Label>ID / National ID No.</Label>
+        <Input className="mt-1.5" placeholder="e.g. 12345678" value={form.national_id} onChange={(e) => setForm({ ...form, national_id: e.target.value })} />
+      </div>
+    </div>
+  );
+}
+
+function buildPayload(form: StaffForm) {
+  const isSupport = form.role === "Support Staff";
+  const designation = isSupport
+    ? (form.support_job === "Other" ? form.support_job_other || "Support Staff" : form.support_job)
+    : form.role;
+  let department: string;
+  if (isSupport) department = "Support";
+  else if (form.role === "Accountant") department = "Finance";
+  else if (form.role === "Teacher" && form.subjects.length) department = form.subjects.join(", ");
+  else department = form.role;
+  return { designation, department };
+}
+
 function NewStaffDialog({ onDone }: { onDone: () => void }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({
-    first_name: "", last_name: "", staff_no: "", designation: "", department: "",
-    email: "", phone: "", basic_salary: 0, kra_pin: "", nhif_no: "", nssf_no: "",
+  const [form, setForm] = useState<StaffForm>(emptyForm);
+
+  const classesQ = useQuery({
+    queryKey: ["staff-classes"],
+    queryFn: async () => {
+      const { data } = await supabase.from("classes").select("id, name").order("name");
+      return data ?? [];
+    },
   });
 
   const m = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("staff").insert(form);
+      const { data: existing } = await supabase.from("staff").select("id", { count: "exact", head: true });
+      const seq = String((existing as any)?.length ?? Date.now() % 10000).padStart(4, "0");
+      const staff_no = `STF-${seq}`;
+      const { designation, department } = buildPayload(form);
+      const { error } = await supabase.from("staff").insert({
+        first_name: form.first_name,
+        last_name: form.last_name,
+        staff_no,
+        designation,
+        department,
+        email: form.email || null,
+        phone: form.phone || null,
+        kra_pin: form.national_id || null,
+      });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Staff added"); setOpen(false); onDone(); },
+    onSuccess: () => { toast.success("Staff added"); setOpen(false); setForm(emptyForm); onDone(); },
+    onError: (e: any) => toast.error(e.message ?? "Failed"),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setForm(emptyForm); }}>
+      <DialogTrigger asChild>
+        <Button><Plus className="size-4 mr-1" /> Add Staff</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <UserPlus className="size-5 text-primary" /> Add Staff Member
+          </DialogTitle>
+        </DialogHeader>
+        <StaffFormFields form={form} setForm={setForm} classes={classesQ.data ?? []} />
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={() => m.mutate()} disabled={!form.first_name || !form.last_name || m.isPending}>
+            <Save className="size-4 mr-1" /> {m.isPending ? "Saving…" : "Save Staff"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditStaffDialog({ staff, onDone }: { staff: any; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const isSupportRow = roleBucket(staff.designation) === "support";
+  const initialRole: Role = isSupportRow ? "Support Staff"
+    : (ROLES as readonly string[]).includes(staff.designation) ? (staff.designation as Role)
+    : staff.designation?.toLowerCase().includes("accountant") ? "Accountant"
+    : "Teacher";
+  const [form, setForm] = useState<StaffForm>({
+    ...emptyForm,
+    first_name: staff.first_name ?? "",
+    last_name: staff.last_name ?? "",
+    role: initialRole,
+    phone: staff.phone ?? "",
+    email: staff.email ?? "",
+    national_id: staff.kra_pin ?? "",
+    support_job: isSupportRow && SUPPORT_JOBS.includes(staff.designation) ? staff.designation : "Other",
+    support_job_other: isSupportRow && !SUPPORT_JOBS.includes(staff.designation) ? (staff.designation ?? "") : "",
+    subjects: !isSupportRow && staff.department ? staff.department.split(",").map((s: string) => s.trim()).filter((s: string) => SUBJECTS.includes(s)) : [],
+  });
+
+  const classesQ = useQuery({
+    queryKey: ["staff-classes"],
+    queryFn: async () => (await supabase.from("classes").select("id, name").order("name")).data ?? [],
+  });
+
+  const m = useMutation({
+    mutationFn: async () => {
+      const { designation, department } = buildPayload(form);
+      const { error } = await supabase.from("staff").update({
+        first_name: form.first_name,
+        last_name: form.last_name,
+        designation,
+        department,
+        email: form.email || null,
+        phone: form.phone || null,
+        kra_pin: form.national_id || null,
+      }).eq("id", staff.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Staff updated"); setOpen(false); onDone(); },
     onError: (e: any) => toast.error(e.message ?? "Failed"),
   });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button><Plus className="size-4 mr-1" /> Add staff</Button></DialogTrigger>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Add staff member</DialogTitle></DialogHeader>
-        <div className="grid grid-cols-2 gap-3">
-          <div><Label>First name</Label><Input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></div>
-          <div><Label>Last name</Label><Input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></div>
-          <div><Label>Staff no.</Label><Input value={form.staff_no} onChange={(e) => setForm({ ...form, staff_no: e.target.value })} /></div>
-          <div><Label>Designation</Label><Input value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} /></div>
-          <div><Label>Department</Label><Input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} /></div>
-          <div><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-          <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-          <div><Label>Basic salary (KES)</Label><Input type="number" value={form.basic_salary} onChange={(e) => setForm({ ...form, basic_salary: Number(e.target.value) })} /></div>
-          <div><Label>KRA PIN</Label><Input value={form.kra_pin} onChange={(e) => setForm({ ...form, kra_pin: e.target.value })} /></div>
-          <div><Label>NHIF no.</Label><Input value={form.nhif_no} onChange={(e) => setForm({ ...form, nhif_no: e.target.value })} /></div>
-          <div><Label>NSSF no.</Label><Input value={form.nssf_no} onChange={(e) => setForm({ ...form, nssf_no: e.target.value })} /></div>
-        </div>
+      <DialogTrigger asChild>
+        <button title="Edit" className="size-8 inline-flex items-center justify-center rounded-md border bg-background hover:bg-muted">
+          <Pencil className="size-4" />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Pencil className="size-5 text-primary" /> Edit Staff Member
+          </DialogTitle>
+        </DialogHeader>
+        <StaffFormFields form={form} setForm={setForm} classes={classesQ.data ?? []} />
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={() => m.mutate()} disabled={!form.first_name || !form.last_name || !form.staff_no || m.isPending}>
-            {m.isPending ? "Saving…" : "Save"}
+          <Button onClick={() => m.mutate()} disabled={m.isPending}>
+            <Save className="size-4 mr-1" /> {m.isPending ? "Saving…" : "Save Changes"}
           </Button>
         </DialogFooter>
       </DialogContent>
