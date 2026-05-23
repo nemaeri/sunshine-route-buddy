@@ -32,6 +32,22 @@ const SUPPORT_JOBS = [
   "Driver", "Bus Assistant", "Transport Manager",
   "Nurse", "Receptionist", "Storekeeper", "Other",
 ];
+const ALL_JOB_OPTIONS = [
+  "Teacher", "Head Teacher", "Deputy Head", "Accountant",
+  ...SUPPORT_JOBS.filter((j) => j !== "Other"),
+];
+
+async function syncRoles(staffId: string, primary: string, extras: string[]) {
+  await supabase.from("staff_roles").delete().eq("staff_id", staffId);
+  const rows = [
+    { staff_id: staffId, role_label: primary, is_primary: true },
+    ...extras
+      .filter((r) => r && r !== primary)
+      .map((r) => ({ staff_id: staffId, role_label: r, is_primary: false })),
+  ];
+  if (rows.length) await supabase.from("staff_roles").insert(rows);
+}
+
 
 function roleBucket(designation: string | null | undefined): "teacher" | "accountant" | "support" | "admin" {
   const d = (designation ?? "").toLowerCase();
