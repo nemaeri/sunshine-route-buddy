@@ -203,14 +203,13 @@ function AllPaymentsPage() {
           </div>
           <div>
             <Label className="text-xs">Category</Label>
-            <select
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              <option value="">All categories</option>
-              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
+            <Select value={category || "__all"} onValueChange={(v) => setCategory(v === "__all" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="All categories" /></SelectTrigger>
+              <SelectContent className="max-h-72">
+                <SelectItem value="__all">All categories</SelectItem>
+                {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label className="text-xs">From</Label>
