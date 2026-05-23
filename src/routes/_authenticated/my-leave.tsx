@@ -231,6 +231,28 @@ function MyLeavePage() {
         </div>
       </Card>
 
+      {staffId && (balancesQ.data?.length ?? 0) > 0 ? (
+        <Card className="p-4 mb-4">
+          <div className="text-sm font-medium mb-3">Leave balances — {currentYear}</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {(balancesQ.data ?? []).map((b) => (
+              <div key={b.leave_type} className="rounded-md border border-border p-2">
+                <div className="text-xs text-muted-foreground capitalize">{b.leave_type}</div>
+                <div className="text-lg font-semibold">
+                  {b.remaining_days === null ? "∞" : b.remaining_days}
+                  <span className="text-xs font-normal text-muted-foreground ml-1">
+                    / {b.entitled_days === null ? "∞" : (b.entitled_days + b.carried_over_days)}
+                  </span>
+                </div>
+                <div className="text-[11px] text-muted-foreground">
+                  Used {b.used_days}{b.carried_over_days ? ` · +${b.carried_over_days} carryover` : ""}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : null}
+
       <Card className="overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/40 text-muted-foreground">
