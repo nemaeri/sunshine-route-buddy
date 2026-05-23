@@ -260,7 +260,108 @@ function AllPaymentsPage() {
           </table>
         </div>
       </Card>
+
+      <ReceiptDialog paymentId={receiptId} payments={all} onClose={() => setReceiptId(null)} />
     </>
+  );
+}
+
+function ReceiptDialog({ paymentId, payments, onClose }: { paymentId: string | null; payments: any[]; onClose: () => void }) {
+  const p = useMemo(() => payments.find((x) => x.id === paymentId), [payments, paymentId]);
+
+  const schoolQ = useQuery({
+    queryKey: ["school-settings"],
+    queryFn: async () => {
+      const r = await supabase.from("school_settings").select("*").maybeSingle();
+      if (r.error) throw r.error;
+      return r.data;
+    },
+  });
+
+  const classQ = useQuery({
+    queryKey: ["student-class", p?.student?.id],
+    enabled: !!p?.student?.id,
+    queryFn: async () => {
+      const s = await supabase.from("students").select("class_id").eq("id", p!.student.id).maybeSingle();
+      if (!s.data?.class_id) return null;
+      const c = await supabase.from("classes").select("name").eq("id", s.data.class_id).maybeSingle();
+      return c.data?.name ?? null;
+    },
+  });
+
+  const invoiceQ = useQuery({
+    queryKey: ["receipt-invoice", p?.invoice_id],
+    enabled: !!p?.invoice_id,
+    queryFn: async () => {
+      const r = await supabase.from("invoices").select("balance, total_amount").eq("id", p!.invoice_id).maybeSingle();
+      return r.data;
+    },
+  });
+
+  if (!p) return null;
+  const school = schoolQ.data;
+  const inv = invoiceQ.data;
+  const balanceAfter = inv ? Number(inv.balance) : 0;
+  const dateStr = new Date(p.paid_on).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+  const print = () => {
+    const node = document.getElementById("receipt-print");
+    if (!node) return;
+    const w = window.open("", "_blank", "width=600,height=800");
+    if (!w) return;
+    w.document.write(`<html><head><title>${receiptNo(p)}</title><style>
+      body{font-family:system-ui,sans-serif;padding:24px;color:#0f172a}
+      .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #e5e7eb}
+      .center{text-align:center}
+      .paid{background:#0d5c3d;color:#fff;padding:10px;display:flex;justify-content:space-between;font-weight:700;margin-top:12px}
+      .bal{background:#dcfce7;color:#0f172a;padding:10px;display:flex;justify-content:space-between;font-weight:600}
+      .badge{display:inline-block;background:#f1f5f9;padding:6px 14px;border-radius:999px;font-size:11px;letter-spacing:.15em;font-weight:700;margin:8px 0}
+      h2{margin:6px 0}
+    </style></head><body>${node.innerHTML}</body></html>`);
+    w.document.close();
+    setTimeout(() => { w.print(); }, 250);
+  };
+
+  return (
+    <Dialog open={!!paymentId} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-md p-0">
+        <DialogHeader className="sr-only"><DialogTitle>Receipt {receiptNo(p)}</DialogTitle></DialogHeader>
+        <div id="receipt-print" className="p-6 bg-white">
+          <div className="center text-center">
+            {school?.logo_url && <img src={school.logo_url} alt="logo" className="size-14 mx-auto mb-2" />}
+            <h2 className="font-bold text-lg">{school?.name ?? "School"}</h2>
+            {school?.p_o_box && <div className="text-xs text-muted-foreground">P.O. BOX {school.p_o_box}{school.town ? ` - ${school.town}` : ""}</div>}
+            {school?.phone && <div className="text-xs text-muted-foreground">Tel: {school.phone}</div>}
+            <div className="badge mt-2 inline-block bg-secondary px-3 py-1 rounded-full text-[10px] tracking-widest font-bold">OFFICIAL RECEIPT</div>
+          </div>
+
+          <div className="mt-4 text-sm">
+            <div className="row flex justify-between py-1.5 border-b border-dashed"><span className="text-muted-foreground">Receipt No</span><span className="font-bold">{receiptNo(p)}</span></div>
+            <div className="row flex justify-between py-1.5 border-b border-dashed"><span className="text-muted-foreground">Date</span><span className="font-bold">{dateStr}</span></div>
+            <div className="row flex justify-between py-1.5 border-b border-dashed mt-3"><span className="text-muted-foreground">Student</span><span className="font-bold">{p.student?.first_name} {p.student?.last_name}</span></div>
+            <div className="row flex justify-between py-1.5 border-b border-dashed"><span className="text-muted-foreground">Adm No.</span><span className="font-bold">{p.student?.admission_no}</span></div>
+            {classQ.data && <div className="row flex justify-between py-1.5 border-b border-dashed"><span className="text-muted-foreground">Class</span><span className="font-bold">{classQ.data}</span></div>}
+            <div className="row flex justify-between py-1.5 border-b border-dashed"><span className="text-muted-foreground">For</span><span className="font-bold">{p.category}</span></div>
+            <div className="row flex justify-between py-1.5 border-b border-dashed"><span className="text-muted-foreground">Method</span><span className="font-bold capitalize">{p.method.replace("mpesa", "M-Pesa")}{p.reference ? ` · ${p.reference}` : ""}</span></div>
+          </div>
+
+          <div className="paid mt-3 flex justify-between items-center bg-[#0d5c3d] text-white px-3 py-2.5 font-bold">
+            <span className="text-xs tracking-widest">AMOUNT PAID</span>
+            <span>{kes(Number(p.amount))}</span>
+          </div>
+          <div className="bal flex justify-between items-center bg-green-100 px-3 py-2 font-semibold text-sm">
+            <span>Balance after</span>
+            <span>{kes(balanceAfter)}</span>
+          </div>
+
+          <div className="text-right text-xs text-muted-foreground mt-3">Received by <span className="font-semibold text-foreground">System</span></div>
+          <div className="text-center text-[11px] text-muted-foreground mt-3">Thank you · {school?.name ?? ""}</div>
+        </div>
+        <div className="p-4 pt-0 flex justify-center">
+          <Button onClick={print} variant="secondary"><Printer className="size-4 mr-1" /> Print</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
