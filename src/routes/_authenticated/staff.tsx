@@ -190,9 +190,16 @@ function StaffPage() {
                 <tr key={s.id} className="border-b border-border last:border-0 hover:bg-muted/30">
                   <td className="px-5 py-4 font-medium">{s.first_name} {s.last_name}</td>
                   <td className="px-5 py-4">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
-                      {s.designation || "—"}
-                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
+                        {s.designation || "—"}
+                      </span>
+                      {(rolesByStaff[s.id] ?? []).map((r) => (
+                        <span key={r} className="inline-flex items-center px-2.5 py-1 rounded-full bg-violet-50 text-violet-700 text-xs font-medium border border-violet-100">
+                          +{r}
+                        </span>
+                      ))}
+                    </div>
                   </td>
                   <td className="px-5 py-4 text-muted-foreground">{s.email || "—"}</td>
                   <td className="px-5 py-4 text-muted-foreground">{s.phone || "—"}</td>
