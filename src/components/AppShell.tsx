@@ -4,14 +4,9 @@ import {
   LayoutDashboard,
   Users,
   GraduationCap,
-  ClipboardCheck,
-  Wallet,
-  CalendarCheck2,
   Bus,
-  Megaphone,
   Settings,
   LogOut,
-  UserCog,
   LayoutGrid,
   CalendarDays,
   PlaneTakeoff,
@@ -41,13 +36,11 @@ const SECTIONS: NavSection[] = [
     title: "Main",
     items: [
       { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/students", label: "Students", icon: GraduationCap, roles: ["admin", "teacher"] },
-      { to: "/classes", label: "Classes & Streams", icon: Users, roles: ["admin", "teacher"] },
-      { to: "/attendance", label: "Attendance", icon: ClipboardCheck, roles: ["admin", "teacher"] },
-      { to: "/my-children", label: "My Children", icon: GraduationCap, roles: ["parent"] },
-      { to: "/staff-dashboard", label: "Staff dashboard", icon: LayoutGrid, roles: ["admin", "teacher", "finance"] },
-      { to: "/leave-requests", label: "Leave requests", icon: CalendarDays, roles: ["admin"] },
-      { to: "/my-leave", label: "My leave", icon: PlaneTakeoff, roles: ["admin", "teacher", "finance"] },
+      { to: "/students", label: "Students", icon: GraduationCap },
+      { to: "/classes", label: "Classes & Streams", icon: Users },
+      { to: "/staff-dashboard", label: "Staff dashboard", icon: LayoutGrid },
+      { to: "/leave-requests", label: "Leave requests", icon: CalendarDays },
+      { to: "/my-leave", label: "My leave", icon: PlaneTakeoff },
     ],
   },
   {
@@ -55,37 +48,34 @@ const SECTIONS: NavSection[] = [
     items: [
       { to: "/settings", label: "Settings", icon: Settings },
       { to: "/bus", label: "Transport", icon: Bus },
-      { to: "/announcements", label: "Announcements", icon: Megaphone },
     ],
   },
   {
     title: "Academic",
     items: [
-      { to: "/subjects", label: "Subjects", icon: BookOpen, roles: ["admin", "teacher"] },
-      { to: "/timetable", label: "Timetable", icon: CalendarRange, roles: ["admin", "teacher", "parent"] },
-      { to: "/exams", label: "Exams & Reports", icon: CalendarCheck2, roles: ["admin", "teacher", "parent"] },
-      { to: "/fee-structure", label: "Fee Structure", icon: Receipt, roles: ["admin", "finance"] },
+      { to: "/subjects", label: "Subjects", icon: BookOpen },
+      { to: "/timetable", label: "Timetable", icon: CalendarRange },
+      { to: "/fee-structure", label: "Fee Structure", icon: Receipt },
     ],
   },
   {
     title: "Finance",
     items: [
-      { to: "/finance", label: "Invoices", icon: Wallet, roles: ["admin", "finance", "parent"] },
-      { to: "/all-payments", label: "All payments", icon: CreditCard, roles: ["admin", "finance"] },
-      { to: "/financial-statement", label: "Financial statement", icon: FileSpreadsheet, roles: ["admin", "finance"] },
-      { to: "/finance-overview", label: "Finance Overview", icon: PieChart, roles: ["admin", "finance"] },
-      { to: "/payroll", label: "Payroll", icon: Banknote, roles: ["admin", "finance"] },
-      { to: "/staff", label: "Staff Registry", icon: UserCog, roles: ["admin", "finance"] },
-      { to: "/student-ledger", label: "Student Ledger", icon: BookUser, roles: ["admin", "finance", "parent"] },
+      { to: "/all-payments", label: "All payments", icon: CreditCard },
+      { to: "/financial-statement", label: "Financial statement", icon: FileSpreadsheet },
+      { to: "/finance-overview", label: "Finance Overview", icon: PieChart },
+      { to: "/payroll", label: "Payroll", icon: Banknote },
+      { to: "/student-ledger", label: "Student Ledger", icon: BookUser },
     ],
   },
   {
     title: "Insights",
     items: [
-      { to: "/reports", label: "Reports", icon: BarChart3, roles: ["admin", "teacher", "finance"] },
+      { to: "/reports", label: "Reports", icon: BarChart3 },
     ],
   },
 ];
+
 
 function termLabel() {
   const m = new Date().getMonth() + 1;

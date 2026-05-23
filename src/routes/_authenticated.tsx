@@ -1,6 +1,4 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import AppShell from "@/components/AppShell";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -8,21 +6,8 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthLayout() {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth" });
-  }, [user, loading, navigate]);
-
-  if (loading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
-        Loading…
-      </div>
-    );
-  }
-
+  // Auth temporarily bypassed — super admin dashboard opens directly.
+  // Login page will be re-enabled later.
   return (
     <AppShell>
       <Outlet />
