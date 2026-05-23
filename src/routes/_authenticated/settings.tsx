@@ -46,7 +46,7 @@ function SettingsPage() {
         </TabsList>
         <TabsContent value="school"><SchoolProfileTab canEdit={canEdit} /></TabsContent>
         <TabsContent value="leave"><LeavePoliciesTab canEdit={canEdit} /></TabsContent>
-        <TabsContent value="users"><UsersRolesTab canEdit={roles.includes("admin")} /></TabsContent>
+        <TabsContent value="users"><UsersRolesTab canEdit={canEditUsers} /></TabsContent>
         <TabsContent value="terms"><TermsTab canEdit={canEdit} /></TabsContent>
       </Tabs>
     </>
