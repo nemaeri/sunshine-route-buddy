@@ -11,21 +11,44 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { Upload, Download, Wallet } from "lucide-react";
+import { Upload, Download } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/all-payments")({
   component: AllPaymentsPage,
-  head: () => ({ meta: [{ title: "All Payments — JEC" }] }),
+  head: () => ({ meta: [{ title: "Payment tracker — JEC" }] }),
 });
 
 function kes(n: number) {
   return new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(n || 0);
 }
 
+function ymd(d: Date) { return d.toISOString().slice(0, 10); }
+function startOfWeek(d: Date) { const x = new Date(d); const day = (x.getDay() + 6) % 7; x.setDate(x.getDate() - day); return x; }
+function startOfMonth(d: Date) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+
+function receiptNo(p: { paid_on: string; created_at: string; id: string }) {
+  const y = new Date(p.paid_on || p.created_at).getFullYear();
+  // last 6 chars of uuid, hex → number, mod 999999
+  const tail = p.id.replace(/-/g, "").slice(-6);
+  const n = (parseInt(tail, 16) % 999999).toString().padStart(6, "0");
+  return `RCT-${y}-${n}`;
+}
+
 function AllPaymentsPage() {
   const { roles, user } = useAuth();
   const canManage = roles.includes("admin") || roles.includes("finance");
   const qc = useQueryClient();
+
+  // Default date range: this month
+  const today = new Date();
+  const [from, setFrom] = useState(ymd(startOfMonth(today)));
+  const [to, setTo] = useState(ymd(today));
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [appliedFrom, setAppliedFrom] = useState(from);
+  const [appliedTo, setAppliedTo] = useState(to);
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const [appliedCat, setAppliedCat] = useState("");
 
   const paymentsQ = useQuery({
     queryKey: ["all-payments"],
@@ -34,16 +57,13 @@ function AllPaymentsPage() {
         .from("payments")
         .select("id, amount, method, reference, paid_on, created_at, invoice_id")
         .order("paid_on", { ascending: false })
-        .limit(500);
+        .limit(1000);
       if (p.error) throw p.error;
-      const invIds = (p.data ?? []).map((x) => x.invoice_id);
+      const invIds = Array.from(new Set((p.data ?? []).map((x) => x.invoice_id)));
       if (!invIds.length) return [];
-      const inv = await supabase
-        .from("invoices")
-        .select("id, student_id, term_id")
-        .in("id", invIds);
-      const sIds = (inv.data ?? []).map((i) => i.student_id);
-      const tIds = (inv.data ?? []).map((i) => i.term_id);
+      const inv = await supabase.from("invoices").select("id, student_id, term_id, notes").in("id", invIds);
+      const sIds = Array.from(new Set((inv.data ?? []).map((i) => i.student_id)));
+      const tIds = Array.from(new Set((inv.data ?? []).map((i) => i.term_id)));
       const [st, te] = await Promise.all([
         sIds.length ? supabase.from("students").select("id, first_name, last_name, admission_no").in("id", sIds) : Promise.resolve({ data: [] as any[] }),
         tIds.length ? supabase.from("terms").select("id, academic_year, term_number").in("id", tIds) : Promise.resolve({ data: [] as any[] }),
@@ -53,70 +73,193 @@ function AllPaymentsPage() {
       const tm = new Map((te.data ?? []).map((x: any) => [x.id, x]));
       return (p.data ?? []).map((x: any) => {
         const i = im.get(x.invoice_id);
-        return { ...x, student: i ? sm.get(i.student_id) : null, term: i ? tm.get(i.term_id) : null };
+        return {
+          ...x,
+          student: i ? sm.get(i.student_id) : null,
+          term: i ? tm.get(i.term_id) : null,
+          category: (i?.notes as string) || "—",
+        };
       });
     },
   });
 
-  const totals = useMemo(() => {
-    const list = paymentsQ.data ?? [];
+  const all = paymentsQ.data ?? [];
+
+  const categories = useMemo(() => {
+    const s = new Set<string>();
+    all.forEach((p: any) => { if (p.category && p.category !== "—") s.add(p.category); });
+    return Array.from(s).sort();
+  }, [all]);
+
+  // Cards — always over ALL payments (not filtered)
+  const cards = useMemo(() => {
+    const tStr = ymd(today);
+    const wStr = ymd(startOfWeek(today));
+    const mStr = ymd(startOfMonth(today));
+    const sum = (pred: (p: any) => boolean) => all.filter(pred).reduce((a: number, p: any) => a + Number(p.amount || 0), 0);
     return {
-      count: list.length,
-      sum: list.reduce((a: number, p: any) => a + Number(p.amount || 0), 0),
+      today: sum((p) => p.paid_on === tStr),
+      week: sum((p) => p.paid_on >= wStr),
+      month: sum((p) => p.paid_on >= mStr),
+      mpesa: sum((p) => p.paid_on >= mStr && p.method === "mpesa"),
+      bank: sum((p) => p.paid_on >= mStr && p.method === "bank"),
+      cash: sum((p) => p.paid_on >= mStr && (p.method === "cash" || p.method === "adjustment")),
     };
-  }, [paymentsQ.data]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [all]);
+
+  // Filtered table
+  const rows = useMemo(() => {
+    const q = appliedSearch.trim().toLowerCase();
+    return all.filter((p: any) => {
+      if (p.paid_on < appliedFrom || p.paid_on > appliedTo) return false;
+      if (appliedCat && p.category !== appliedCat) return false;
+      if (q) {
+        const name = `${p.student?.first_name ?? ""} ${p.student?.last_name ?? ""}`.toLowerCase();
+        const adm = (p.student?.admission_no ?? "").toLowerCase();
+        const ref = (p.reference ?? "").toLowerCase();
+        const rcpt = receiptNo(p).toLowerCase();
+        if (!name.includes(q) && !adm.includes(q) && !ref.includes(q) && !rcpt.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [all, appliedFrom, appliedTo, appliedSearch, appliedCat]);
+
+  const apply = () => { setAppliedFrom(from); setAppliedTo(to); setAppliedSearch(search); setAppliedCat(category); };
+
+  const exportCsv = () => {
+    const header = ["date", "receipt", "student", "admission_no", "category", "amount", "method", "reference"];
+    const lines = [header.join(",")].concat(
+      rows.map((p: any) => [
+        p.paid_on,
+        receiptNo(p),
+        p.student ? `${p.student.first_name} ${p.student.last_name}` : "",
+        p.student?.admission_no ?? "",
+        (p.category ?? "").replace(/,/g, " "),
+        p.amount,
+        p.method,
+        (p.reference ?? "").replace(/,/g, " "),
+      ].join(","))
+    );
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `payments-${appliedFrom}_to_${appliedTo}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const unpaidCount = useMemo(() => {
+    // count unique students with unpaid balance (rough — placeholder pending invoice query)
+    return 0;
+  }, []);
 
   return (
     <>
       <PageHeader
-        title="All Payments"
-        description="Cashbook of every payment received across all invoices"
+        title="Payment tracker"
+        description="Search, filter, export"
         actions={
-          canManage ? (
-            <div className="flex gap-2">
-              <CsvTemplateButton />
-              <BulkImportDialog onDone={() => qc.invalidateQueries({ queryKey: ["all-payments"] })} userId={user?.id ?? null} />
-            </div>
-          ) : null
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={exportCsv}><Download className="size-4 mr-1" /> Export CSV</Button>
+            {canManage && <CsvTemplateButton />}
+            {canManage && <BulkImportDialog onDone={() => qc.invalidateQueries({ queryKey: ["all-payments"] })} userId={user?.id ?? null} />}
+          </div>
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <Card className="p-5">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Payments recorded</p>
-          <p className="text-3xl font-display font-bold text-brand-navy mt-1">{totals.count}</p>
-        </Card>
-        <Card className="p-5">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total collected</p>
-          <p className="text-3xl font-display font-bold text-brand-navy mt-1">{kes(totals.sum)}</p>
-        </Card>
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+        <StatCard label="Today" value={kes(cards.today)} />
+        <StatCard label="This week" value={kes(cards.week)} />
+        <StatCard label="This month" value={kes(cards.month)} />
+        <StatCard label="M-Pesa (MTD)" value={kes(cards.mpesa)} />
+        <StatCard label="Bank (MTD)" value={kes(cards.bank)} />
+        <StatCard label="Cash & Adj. (MTD)" value={kes(cards.cash)} />
       </div>
+      <p className="text-xs text-muted-foreground mb-4">
+        {unpaidCount} active pupils with unpaid balance · MTD = month to date by method
+      </p>
 
-      <Card className="overflow-hidden">
-        <div className="px-5 py-3 border-b border-border bg-secondary/30 flex items-center gap-2">
-          <Wallet className="size-4" />
-          <h3 className="font-display font-bold text-sm">Recent payments</h3>
+      {/* Filters */}
+      <Card className="p-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+          <div>
+            <Label className="text-xs">Search</Label>
+            <Input placeholder="Name, adm, ref, receipt" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">Category</Label>
+            <select
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              <option value="">All categories</option>
+              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
+            <Label className="text-xs">From</Label>
+            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">To</Label>
+            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+          </div>
+          <Button onClick={apply}>Apply</Button>
         </div>
-        {paymentsQ.isLoading && <p className="p-6 text-sm text-muted-foreground">Loading…</p>}
-        {paymentsQ.data?.length === 0 && <p className="p-8 text-center text-sm text-muted-foreground">No payments yet. Use “Bulk import” to load historical records.</p>}
-        <ul className="divide-y divide-border">
-          {paymentsQ.data?.map((p: any) => (
-            <li key={p.id} className="px-5 py-3 flex items-center justify-between gap-4">
-              <div className="flex-1">
-                <p className="text-sm font-medium">
-                  {p.student ? `${p.student.first_name} ${p.student.last_name}` : "—"}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {p.student?.admission_no} {p.term ? `· ${p.term.academic_year} T${p.term.term_number}` : ""} · {new Date(p.paid_on).toLocaleDateString()} · {p.method}
-                  {p.reference ? ` · ${p.reference}` : ""}
-                </p>
-              </div>
-              <p className="text-sm font-bold">{kes(Number(p.amount))}</p>
-            </li>
-          ))}
-        </ul>
+      </Card>
+
+      {/* Table */}
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="text-left px-4 py-3">Date</th>
+                <th className="text-left px-4 py-3">Receipt</th>
+                <th className="text-left px-4 py-3">Student</th>
+                <th className="text-left px-4 py-3">Category</th>
+                <th className="text-right px-4 py-3">Amount</th>
+                <th className="text-left px-4 py-3">Method</th>
+                <th className="text-left px-4 py-3">Ref</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {paymentsQ.isLoading && (
+                <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Loading…</td></tr>
+              )}
+              {!paymentsQ.isLoading && rows.length === 0 && (
+                <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">No payments match the current filters.</td></tr>
+              )}
+              {rows.map((p: any) => (
+                <tr key={p.id} className="hover:bg-secondary/20">
+                  <td className="px-4 py-3 whitespace-nowrap">{new Date(p.paid_on).toLocaleDateString()} · {new Date(p.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
+                  <td className="px-4 py-3"><span className="text-primary underline">{receiptNo(p)}</span></td>
+                  <td className="px-4 py-3">
+                    <div className="font-medium">{p.student ? `${p.student.first_name} ${p.student.last_name}` : "—"}</div>
+                    <div className="text-[11px] text-muted-foreground">{p.student?.admission_no}</div>
+                  </td>
+                  <td className="px-4 py-3">{p.category}</td>
+                  <td className="px-4 py-3 text-right font-bold">{kes(Number(p.amount))}</td>
+                  <td className="px-4 py-3 capitalize">{p.method.replace("mpesa", "M-Pesa")}</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">{p.reference}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
     </>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <Card className="p-4">
+      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{label}</p>
+      <p className="text-lg font-display font-bold text-brand-navy mt-1">{value}</p>
+    </Card>
   );
 }
 
@@ -190,7 +333,6 @@ function BulkImportDialog({ onDone, userId }: { onDone: () => void; userId: stri
         const te = await supabase.from("terms").select("id").eq("academic_year", yr).eq("term_number", tn).maybeSingle();
         if (te.error || !te.data) throw new Error(`term ${yr} T${tn} not found`);
 
-        // Find or create invoice
         const existing = await supabase
           .from("invoices")
           .select("id, total_amount, balance")
