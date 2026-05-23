@@ -83,7 +83,8 @@ function StaffPage() {
     const m: Record<string, string[]> = {};
     (rolesQ.data ?? []).forEach((r: any) => {
       if (r.is_primary) return;
-      (m[r.staff_id] ??= []).push(r.role_label);
+      if (!m[r.staff_id]) m[r.staff_id] = [];
+      m[r.staff_id].push(r.role_label);
     });
     return m;
   }, [rolesQ.data]);
