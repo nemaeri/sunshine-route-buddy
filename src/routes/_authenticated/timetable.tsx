@@ -149,6 +149,7 @@ function TimetablePage() {
         </Card>
       )}
 
+      {classId && (
       <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
         {DAYS.map((d) => {
           const list = byDay.get(d.num) ?? [];
@@ -194,6 +195,7 @@ function TimetablePage() {
           );
         })}
       </div>
+      )}
 
       <SlotDialog
         open={open}
