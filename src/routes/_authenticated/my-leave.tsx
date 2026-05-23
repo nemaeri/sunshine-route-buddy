@@ -34,6 +34,14 @@ function daysBetween(a: string, b: string) {
   return Math.max(0, Math.floor(ms / 86400000) + 1);
 }
 
+type Balance = {
+  leave_type: string;
+  entitled_days: number | null;
+  carried_over_days: number;
+  used_days: number;
+  remaining_days: number | null;
+};
+
 function MyLeavePage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
