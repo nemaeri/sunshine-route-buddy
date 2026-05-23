@@ -522,6 +522,17 @@ function EditStaffDialog({ staff, onDone }: { staff: any; onDone: () => void }) 
     queryFn: async () => (await supabase.from("classes").select("id, name").order("name")).data ?? [],
   });
 
+  useQuery({
+    queryKey: ["staff-roles", staff.id, open],
+    enabled: open,
+    queryFn: async () => {
+      const { data } = await supabase.from("staff_roles").select("role_label, is_primary").eq("staff_id", staff.id);
+      const extras = (data ?? []).filter((r: any) => !r.is_primary).map((r: any) => r.role_label);
+      setForm((f) => ({ ...f, extra_roles: extras }));
+      return data ?? [];
+    },
+  });
+
   const m = useMutation({
     mutationFn: async () => {
       const { designation, department } = buildPayload(form);
@@ -535,6 +546,7 @@ function EditStaffDialog({ staff, onDone }: { staff: any; onDone: () => void }) 
         kra_pin: form.national_id || null,
       }).eq("id", staff.id);
       if (error) throw error;
+      await syncRoles(staff.id, designation, form.extra_roles);
     },
     onSuccess: () => { toast.success("Staff updated"); setOpen(false); onDone(); },
     onError: (e: any) => toast.error(e.message ?? "Failed"),
