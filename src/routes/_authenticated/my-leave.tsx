@@ -171,6 +171,15 @@ function MyLeavePage() {
                     >
                       {LEAVE_TYPES.map((t) => <option key={t} value={t} className="capitalize">{t}</option>)}
                     </select>
+                    {staffId && currentBalance ? (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {currentBalance.remaining_days === null
+                          ? "No limit (unpaid)"
+                          : <>Remaining this year: <span className="font-medium text-foreground">{currentBalance.remaining_days}</span> / {(currentBalance.entitled_days ?? 0) + currentBalance.carried_over_days} day(s)</>}
+                      </div>
+                    ) : !staffId ? (
+                      <div className="text-xs text-muted-foreground mt-1">Select a staff member to see balance</div>
+                    ) : null}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
