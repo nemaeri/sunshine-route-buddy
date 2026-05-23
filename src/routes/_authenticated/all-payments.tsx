@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { Upload, Download } from "lucide-react";
+import { Upload, Download, Printer } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/all-payments")({
   component: AllPaymentsPage,
