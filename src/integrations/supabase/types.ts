@@ -356,6 +356,7 @@ export type Database = {
           id: string
           leave_type: string
           max_carryover_days: number | null
+          staff_category: Database["public"]["Enums"]["staff_category"]
           updated_at: string
         }
         Insert: {
@@ -365,6 +366,7 @@ export type Database = {
           id?: string
           leave_type: string
           max_carryover_days?: number | null
+          staff_category?: Database["public"]["Enums"]["staff_category"]
           updated_at?: string
         }
         Update: {
@@ -374,6 +376,7 @@ export type Database = {
           id?: string
           leave_type?: string
           max_carryover_days?: number | null
+          staff_category?: Database["public"]["Enums"]["staff_category"]
           updated_at?: string
         }
         Relationships: []
@@ -727,6 +730,7 @@ export type Database = {
           nhif_no: string | null
           nssf_no: string | null
           phone: string | null
+          staff_category: Database["public"]["Enums"]["staff_category"]
           staff_no: string
           updated_at: string
           user_id: string | null
@@ -746,6 +750,7 @@ export type Database = {
           nhif_no?: string | null
           nssf_no?: string | null
           phone?: string | null
+          staff_category?: Database["public"]["Enums"]["staff_category"]
           staff_no: string
           updated_at?: string
           user_id?: string | null
@@ -765,6 +770,7 @@ export type Database = {
           nhif_no?: string | null
           nssf_no?: string | null
           phone?: string | null
+          staff_category?: Database["public"]["Enums"]["staff_category"]
           staff_no?: string
           updated_at?: string
           user_id?: string | null
@@ -1188,6 +1194,7 @@ export type Database = {
         | "head_teacher"
       attendance_status: "present" | "absent" | "late" | "excused"
       gender: "male" | "female"
+      staff_category: "teaching" | "non_teaching" | "support"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1325,6 +1332,7 @@ export const Constants = {
       ],
       attendance_status: ["present", "absent", "late", "excused"],
       gender: ["male", "female"],
+      staff_category: ["teaching", "non_teaching", "support"],
     },
   },
 } as const
