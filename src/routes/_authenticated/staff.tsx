@@ -385,6 +385,31 @@ function StaffFormFields({ form, setForm, classes }: {
       )}
 
       <div>
+        <Label>Additional Roles (optional)</Label>
+        <p className="text-xs text-muted-foreground mt-1 mb-2">
+          Tap any extra jobs this person also handles (e.g. a Driver who's also Transport Manager).
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {ALL_JOB_OPTIONS.map((j) => {
+            const active = form.extra_roles.includes(j);
+            return (
+              <button
+                key={j}
+                type="button"
+                onClick={() => setForm({
+                  ...form,
+                  extra_roles: active ? form.extra_roles.filter((x) => x !== j) : [...form.extra_roles, j],
+                })}
+                className={`px-3 py-1.5 rounded-md border text-sm transition-colors ${active ? "bg-violet-600 text-white border-violet-600" : "bg-background border-input hover:bg-muted"}`}
+              >
+                {j}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
         <Label>ID / National ID No.</Label>
         <Input className="mt-1.5" placeholder="e.g. 12345678" value={form.national_id} onChange={(e) => setForm({ ...form, national_id: e.target.value })} />
       </div>
