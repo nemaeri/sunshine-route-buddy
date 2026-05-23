@@ -176,8 +176,8 @@ function AllPaymentsPage() {
           <div className="flex gap-2">
             <Button variant="outline" onClick={exportCsv}><Download className="size-4 mr-1" /> Export CSV</Button>
             {canManage && <CsvTemplateButton />}
-            {canManage && <BulkImportDialog onDone={() => qc.invalidateQueries({ queryKey: ["all-payments"] })} userId={user?.id ?? null} />}
-            {canManage && <RecordPaymentDialog onDone={() => qc.invalidateQueries({ queryKey: ["all-payments"] })} userId={user?.id ?? null} />}
+            {canManage && <BulkImportDialog onDone={() => { qc.invalidateQueries({ queryKey: ["all-payments"] }); qc.invalidateQueries({ queryKey: ["fin-overview"] }); }} userId={user?.id ?? null} />}
+            {canManage && <RecordPaymentDialog onDone={() => { qc.invalidateQueries({ queryKey: ["all-payments"] }); qc.invalidateQueries({ queryKey: ["fin-overview"] }); qc.invalidateQueries({ queryKey: ["finance"] }); }} userId={user?.id ?? null} />}
           </div>
         }
       />
