@@ -14,16 +14,638 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      announcements: {
+        Row: {
+          audience: string
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          target_class_id: string | null
+          title: string
+        }
+        Insert: {
+          audience?: string
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          target_class_id?: string | null
+          title: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          target_class_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_target_class_id_fkey"
+            columns: ["target_class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance: {
+        Row: {
+          class_id: string | null
+          created_at: string
+          date: string
+          id: string
+          marked_by: string | null
+          note: string | null
+          status: Database["public"]["Enums"]["attendance_status"]
+          student_id: string
+        }
+        Insert: {
+          class_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          marked_by?: string | null
+          note?: string | null
+          status?: Database["public"]["Enums"]["attendance_status"]
+          student_id: string
+        }
+        Update: {
+          class_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          marked_by?: string | null
+          note?: string | null
+          status?: Database["public"]["Enums"]["attendance_status"]
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bus_positions: {
+        Row: {
+          assignment_id: string
+          heading: number | null
+          id: number
+          lat: number
+          lng: number
+          recorded_at: string
+          speed_kph: number | null
+        }
+        Insert: {
+          assignment_id: string
+          heading?: number | null
+          id?: number
+          lat: number
+          lng: number
+          recorded_at?: string
+          speed_kph?: number | null
+        }
+        Update: {
+          assignment_id?: string
+          heading?: number | null
+          id?: number
+          lat?: number
+          lng?: number
+          recorded_at?: string
+          speed_kph?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bus_positions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "route_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classes: {
+        Row: {
+          academic_year: number
+          class_teacher_id: string | null
+          created_at: string
+          grade_level: string
+          id: string
+          name: string
+          stream: string | null
+          updated_at: string
+        }
+        Insert: {
+          academic_year?: number
+          class_teacher_id?: string | null
+          created_at?: string
+          grade_level: string
+          id?: string
+          name: string
+          stream?: string | null
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: number
+          class_teacher_id?: string | null
+          created_at?: string
+          grade_level?: string
+          id?: string
+          name?: string
+          stream?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      route_assignments: {
+        Row: {
+          created_at: string
+          driver_id: string
+          ended_at: string | null
+          id: string
+          route_id: string
+          service_date: string
+          shift: string
+          started_at: string | null
+          status: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          ended_at?: string | null
+          id?: string
+          route_id: string
+          service_date?: string
+          shift?: string
+          started_at?: string | null
+          status?: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          ended_at?: string | null
+          id?: string
+          route_id?: string
+          service_date?: string
+          shift?: string
+          started_at?: string | null
+          status?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_assignments_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "route_assignments_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      routes: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      staff: {
+        Row: {
+          active: boolean
+          basic_salary: number | null
+          created_at: string
+          department: string | null
+          designation: string | null
+          email: string | null
+          first_name: string
+          hired_on: string | null
+          id: string
+          kra_pin: string | null
+          last_name: string
+          nhif_no: string | null
+          nssf_no: string | null
+          phone: string | null
+          staff_no: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          basic_salary?: number | null
+          created_at?: string
+          department?: string | null
+          designation?: string | null
+          email?: string | null
+          first_name: string
+          hired_on?: string | null
+          id?: string
+          kra_pin?: string | null
+          last_name: string
+          nhif_no?: string | null
+          nssf_no?: string | null
+          phone?: string | null
+          staff_no: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          basic_salary?: number | null
+          created_at?: string
+          department?: string | null
+          designation?: string | null
+          email?: string | null
+          first_name?: string
+          hired_on?: string | null
+          id?: string
+          kra_pin?: string | null
+          last_name?: string
+          nhif_no?: string | null
+          nssf_no?: string | null
+          phone?: string | null
+          staff_no?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      stop_events: {
+        Row: {
+          assignment_id: string
+          event_type: string
+          id: string
+          note: string | null
+          recorded_at: string
+          stop_id: string
+        }
+        Insert: {
+          assignment_id: string
+          event_type: string
+          id?: string
+          note?: string | null
+          recorded_at?: string
+          stop_id: string
+        }
+        Update: {
+          assignment_id?: string
+          event_type?: string
+          id?: string
+          note?: string | null
+          recorded_at?: string
+          stop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stop_events_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "route_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stop_events_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stops: {
+        Row: {
+          created_at: string
+          id: string
+          lat: number | null
+          lng: number | null
+          name: string
+          route_id: string
+          scheduled_dropoff: string | null
+          scheduled_pickup: string | null
+          sequence: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name: string
+          route_id: string
+          scheduled_dropoff?: string | null
+          scheduled_pickup?: string | null
+          sequence?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          route_id?: string
+          scheduled_dropoff?: string | null
+          scheduled_pickup?: string | null
+          sequence?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stops_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_parents: {
+        Row: {
+          created_at: string
+          id: string
+          is_primary: boolean
+          parent_id: string
+          relationship: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          parent_id: string
+          relationship?: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          parent_id?: string
+          relationship?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_parents_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_stop_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          shift: string
+          stop_id: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          shift?: string
+          stop_id: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          shift?: string
+          stop_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_stop_assignments_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_stop_assignments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          active: boolean
+          admission_no: string
+          class_id: string | null
+          created_at: string
+          date_of_birth: string | null
+          enrolled_on: string
+          first_name: string
+          gender: Database["public"]["Enums"]["gender"] | null
+          id: string
+          last_name: string
+          photo_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          admission_no: string
+          class_id?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          enrolled_on?: string
+          first_name: string
+          gender?: Database["public"]["Enums"]["gender"] | null
+          id?: string
+          last_name: string
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          admission_no?: string
+          class_id?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          enrolled_on?: string
+          first_name?: string
+          gender?: Database["public"]["Enums"]["gender"] | null
+          id?: string
+          last_name?: string
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subjects: {
+        Row: {
+          code: string
+          created_at: string
+          grade_levels: string[]
+          id: string
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          grade_levels?: string[]
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          grade_levels?: string[]
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          active: boolean
+          capacity: number | null
+          created_at: string
+          id: string
+          label: string | null
+          plate_no: string
+        }
+        Insert: {
+          active?: boolean
+          capacity?: number | null
+          created_at?: string
+          id?: string
+          label?: string | null
+          plate_no: string
+        }
+        Update: {
+          active?: boolean
+          capacity?: number | null
+          created_at?: string
+          id?: string
+          label?: string | null
+          plate_no?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_parent_of: {
+        Args: { _student: string; _user: string }
+        Returns: boolean
+      }
+      teaches_student: {
+        Args: { _student: string; _user: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "teacher" | "parent" | "driver" | "finance"
+      attendance_status: "present" | "absent" | "late" | "excused"
+      gender: "male" | "female"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +772,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "teacher", "parent", "driver", "finance"],
+      attendance_status: ["present", "absent", "late", "excused"],
+      gender: ["male", "female"],
+    },
   },
 } as const
