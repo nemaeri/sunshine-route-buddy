@@ -64,6 +64,29 @@ function MyLeavePage() {
     },
   });
 
+  const currentYear = new Date().getFullYear();
+  const balancesQ = useQuery({
+    queryKey: ["leave-balances", staffId, currentYear],
+    enabled: !!staffId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("leave_balances")
+        .select("*")
+        .eq("staff_id", staffId)
+        .eq("year", currentYear);
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        leave_type: string; entitled_days: number | null; carried_over_days: number;
+        used_days: number; remaining_days: number | null;
+      }>;
+    },
+  });
+
+  const currentBalance = useMemo(
+    () => (balancesQ.data ?? []).find((b) => b.leave_type === leaveType),
+    [balancesQ.data, leaveType],
+  );
+
   const days = useMemo(() => daysBetween(startDate, endDate), [startDate, endDate]);
 
   const submitM = useMutation({
