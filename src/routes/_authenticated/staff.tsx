@@ -448,7 +448,7 @@ function NewStaffDialog({ onDone }: { onDone: () => void }) {
       const seq = String((existing as any)?.length ?? Date.now() % 10000).padStart(4, "0");
       const staff_no = `STF-${seq}`;
       const { designation, department } = buildPayload(form);
-      const { error } = await supabase.from("staff").insert({
+      const { data: inserted, error } = await supabase.from("staff").insert({
         first_name: form.first_name,
         last_name: form.last_name,
         staff_no,
@@ -457,8 +457,9 @@ function NewStaffDialog({ onDone }: { onDone: () => void }) {
         email: form.email || null,
         phone: form.phone || null,
         kra_pin: form.national_id || null,
-      });
+      }).select("id").single();
       if (error) throw error;
+      if (inserted?.id) await syncRoles(inserted.id, designation, form.extra_roles);
     },
     onSuccess: () => { toast.success("Staff added"); setOpen(false); setForm(emptyForm); onDone(); },
     onError: (e: any) => toast.error(e.message ?? "Failed"),
