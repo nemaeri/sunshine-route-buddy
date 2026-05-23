@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -119,23 +119,37 @@ function TimetablePage() {
         }
       />
 
-      <Card className="p-4 mb-4">
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="min-w-64">
-            <Label className="text-xs">Class</Label>
-            <select
-              className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-              value={classId}
-              onChange={(e) => setClassId(e.target.value)}
-            >
-              {classesQ.data?.map((c: any) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+      {!classesQ.isLoading && (classesQ.data?.length ?? 0) === 0 ? (
+        <Card className="p-10 text-center">
+          <CalendarDays className="size-10 mx-auto text-muted-foreground mb-3" />
+          <h3 className="font-display font-bold text-lg">No classes yet</h3>
+          <p className="text-sm text-muted-foreground mt-1 mb-4">
+            Create at least one class before building a timetable.
+          </p>
+          <Link to="/classes">
+            <Button><Plus className="size-4 mr-1" /> Go to Classes</Button>
+          </Link>
+        </Card>
+      ) : (
+        <Card className="p-4 mb-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="min-w-64">
+              <Label className="text-xs">Class</Label>
+              <select
+                className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                value={classId}
+                onChange={(e) => setClassId(e.target.value)}
+              >
+                {classesQ.data?.map((c: any) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      )}
 
+      {classId && (
       <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
         {DAYS.map((d) => {
           const list = byDay.get(d.num) ?? [];
@@ -181,6 +195,7 @@ function TimetablePage() {
           );
         })}
       </div>
+      )}
 
       <SlotDialog
         open={open}
