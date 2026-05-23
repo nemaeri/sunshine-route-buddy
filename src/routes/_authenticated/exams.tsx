@@ -35,12 +35,19 @@ function ExamsPage() {
   const assessmentsQ = useQuery({
     queryKey: ["assessments"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("assessments")
-        .select("id, name, assessment_type, max_score, assessment_date, class_id, subject_id, term_id, classes:class_id(name, grade_level), subjects:subject_id(name, code), terms:term_id(academic_year, term_number)")
-        .order("assessment_date", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
+      const [a, c, s, t] = await Promise.all([
+        supabase.from("assessments").select("id, name, assessment_type, max_score, assessment_date, class_id, subject_id, term_id").order("assessment_date", { ascending: false }),
+        supabase.from("classes").select("id, name, grade_level"),
+        supabase.from("subjects").select("id, name, code"),
+        supabase.from("terms").select("id, academic_year, term_number"),
+      ]);
+      if (a.error) throw a.error;
+      const cm = new Map((c.data ?? []).map((x: any) => [x.id, x]));
+      const sm = new Map((s.data ?? []).map((x: any) => [x.id, x]));
+      const tm = new Map((t.data ?? []).map((x: any) => [x.id, x]));
+      return (a.data ?? []).map((x: any) => ({
+        ...x, classes: cm.get(x.class_id), subjects: sm.get(x.subject_id), terms: tm.get(x.term_id),
+      }));
     },
   });
 
