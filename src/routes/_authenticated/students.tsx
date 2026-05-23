@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { toast } from "sonner";
-import { Plus, Search, CreditCard, Pencil, Save } from "lucide-react";
+import { Plus, Search, CreditCard, Pencil, Save, Upload, Download } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/students")({
   component: StudentsPage,
@@ -122,6 +122,10 @@ function StudentsPage() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            <ImportStudentsDialog
+              classes={classesQ.data ?? []}
+              onImported={() => qc.invalidateQueries({ queryKey: ["students-full"] })}
+            />
             <EnrollStudentDialog
               classes={classesQ.data ?? []}
               onCreated={() => qc.invalidateQueries({ queryKey: ["students-full"] })}
@@ -499,6 +503,243 @@ function EditStudentDialog({ student, classes, onSaved }: {
           <Button onClick={() => m.mutate()} disabled={m.isPending}>
             <Save className="size-4 mr-1" />
             {m.isPending ? "Saving…" : "Save changes"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const TEMPLATE_HEADERS = [
+  "first_name",
+  "last_name",
+  "date_of_birth",
+  "gender",
+  "grade_level",
+  "stream",
+  "boarding",
+  "lunch",
+  "parent_name",
+  "parent_phone",
+  "parent_email",
+  "home_address",
+];
+
+const TEMPLATE_SAMPLES = [
+  ["John", "Mwangi", "2015-04-12", "male", "Grade 4", "Blue", "false", "true", "Jane Mwangi", "0712345678", "jane@example.com", "Nakuru"],
+  ["Aisha", "Otieno", "2016-09-03", "female", "Grade 3", "Red", "false", "false", "Peter Otieno", "0722333444", "", "Naivasha"],
+  ["Liam", "Kamau", "2018-01-22", "male", "PP2", "", "false", "true", "Mary Kamau", "0700111222", "", "Gilgil"],
+];
+
+function buildCsv(rows: string[][]) {
+  const esc = (v: string) => {
+    if (v == null) return "";
+    const s = String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return rows.map((r) => r.map(esc).join(",")).join("\n");
+}
+
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let cur: string[] = [];
+  let cell = "";
+  let inQ = false;
+  const t = text.replace(/\r\n?/g, "\n");
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (inQ) {
+      if (c === '"') {
+        if (t[i + 1] === '"') { cell += '"'; i++; } else { inQ = false; }
+      } else cell += c;
+    } else {
+      if (c === '"') inQ = true;
+      else if (c === ",") { cur.push(cell); cell = ""; }
+      else if (c === "\n") { cur.push(cell); rows.push(cur); cur = []; cell = ""; }
+      else cell += c;
+    }
+  }
+  if (cell.length > 0 || cur.length > 0) { cur.push(cell); rows.push(cur); }
+  return rows.filter((r) => r.some((v) => v.trim() !== ""));
+}
+
+function toBool(v: string) {
+  const s = (v ?? "").trim().toLowerCase();
+  return s === "true" || s === "yes" || s === "y" || s === "1";
+}
+
+function ImportStudentsDialog({ classes, onImported }: { classes: ClassRow[]; onImported: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<Record<string, string>[]>([]);
+  const [errors, setErrors] = useState<string[]>([]);
+
+  const downloadTemplate = () => {
+    const csv = buildCsv([TEMPLATE_HEADERS, ...TEMPLATE_SAMPLES]);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "students_import_template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleFile = async (f: File) => {
+    setFile(f);
+    setErrors([]);
+    const text = await f.text();
+    const rows = parseCsv(text);
+    if (rows.length < 2) { setErrors(["File appears empty."]); setPreview([]); return; }
+    const headers = rows[0].map((h) => h.trim().toLowerCase());
+    const objs = rows.slice(1).map((r) => {
+      const o: Record<string, string> = {};
+      headers.forEach((h, i) => { o[h] = (r[i] ?? "").trim(); });
+      return o;
+    });
+    setPreview(objs);
+  };
+
+  const m = useMutation({
+    mutationFn: async () => {
+      const year = new Date().getFullYear();
+      const { count } = await supabase.from("students").select("id", { count: "exact", head: true });
+      let seq = count ?? 0;
+      const errs: string[] = [];
+      const inserts = preview.map((row, idx) => {
+        if (!row.first_name || !row.last_name) {
+          errs.push(`Row ${idx + 2}: first_name and last_name required`);
+          return null;
+        }
+        let class_id: string | null = null;
+        if (row.grade_level) {
+          const matches = classes.filter((c) => c.grade_level.toLowerCase() === row.grade_level.toLowerCase());
+          const found = row.stream
+            ? matches.find((c) => (c.stream ?? "").toLowerCase() === row.stream.toLowerCase()) ?? matches[0]
+            : matches[0];
+          if (!found) {
+            errs.push(`Row ${idx + 2}: no class found for "${row.grade_level}${row.stream ? " / " + row.stream : ""}"`);
+            return null;
+          }
+          class_id = found.id;
+        }
+        seq += 1;
+        const admission_no = `ADM-${year}-${String(seq).padStart(4, "0")}`;
+        const gender = ["male", "female", "other"].includes((row.gender ?? "").toLowerCase())
+          ? row.gender.toLowerCase()
+          : null;
+        return {
+          admission_no,
+          first_name: row.first_name,
+          last_name: row.last_name,
+          date_of_birth: row.date_of_birth || null,
+          gender: gender as never,
+          class_id,
+          boarding: toBool(row.boarding),
+          lunch: toBool(row.lunch),
+          parent_name: row.parent_name || null,
+          parent_phone: row.parent_phone || null,
+          parent_email: row.parent_email || null,
+          home_address: row.home_address || null,
+          status: "active",
+          active: true,
+        };
+      }).filter(Boolean) as Array<Record<string, unknown>>;
+
+      if (errs.length) setErrors(errs);
+      if (inserts.length === 0) throw new Error("No valid rows to import");
+
+      const { error } = await supabase.from("students").insert(inserts as never);
+      if (error) throw error;
+      return inserts.length;
+    },
+    onSuccess: (n) => {
+      toast.success(`Imported ${n} student${n === 1 ? "" : "s"}`);
+      setOpen(false);
+      setFile(null);
+      setPreview([]);
+      setErrors([]);
+      onImported();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline"><Upload className="size-4 mr-1" /> Import CSV</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Bulk import students</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <div className="rounded-md border border-border p-4 bg-secondary/30">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-medium text-sm">Step 1 — Download the template</p>
+                <p className="text-xs text-muted-foreground">CSV with required columns and 3 example rows.</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={downloadTemplate}>
+                <Download className="size-4 mr-1" /> Template
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-2">
+              Columns: {TEMPLATE_HEADERS.join(", ")}. <br />
+              <strong>grade_level</strong> must match a class grade (e.g. "Grade 4", "PP2", "Play Group").
+              <strong> stream</strong> is optional — first match in the grade is used when blank.
+              <strong> boarding/lunch</strong>: true/false. Admission numbers are auto-generated.
+            </p>
+          </div>
+
+          <div>
+            <Label>Step 2 — Upload completed CSV</Label>
+            <Input
+              type="file"
+              accept=".csv,text/csv"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+            />
+          </div>
+
+          {preview.length > 0 && (
+            <div className="rounded-md border border-border">
+              <div className="px-3 py-2 border-b border-border text-xs font-medium">
+                Preview — {preview.length} row{preview.length === 1 ? "" : "s"}
+              </div>
+              <div className="max-h-64 overflow-auto">
+                <table className="w-full text-xs">
+                  <thead className="bg-secondary/40 text-[10px] uppercase">
+                    <tr>
+                      <th className="px-2 py-1 text-left">Name</th>
+                      <th className="px-2 py-1 text-left">Grade/Stream</th>
+                      <th className="px-2 py-1 text-left">Parent</th>
+                      <th className="px-2 py-1 text-left">Phone</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {preview.slice(0, 50).map((r, i) => (
+                      <tr key={i} className="border-t border-border">
+                        <td className="px-2 py-1">{r.first_name} {r.last_name}</td>
+                        <td className="px-2 py-1 text-muted-foreground">{r.grade_level}{r.stream ? ` / ${r.stream}` : ""}</td>
+                        <td className="px-2 py-1 text-muted-foreground">{r.parent_name}</td>
+                        <td className="px-2 py-1 text-muted-foreground">{r.parent_phone}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {errors.length > 0 && (
+            <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive space-y-1 max-h-32 overflow-auto">
+              {errors.map((e, i) => <div key={i}>• {e}</div>)}
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={() => m.mutate()} disabled={preview.length === 0 || m.isPending}>
+            <Upload className="size-4 mr-1" />
+            {m.isPending ? "Importing…" : `Import ${preview.length || ""}`}
           </Button>
         </DialogFooter>
       </DialogContent>
