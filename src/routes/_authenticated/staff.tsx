@@ -71,6 +71,30 @@ function StaffPage() {
     },
   });
 
+  const rolesQ = useQuery({
+    queryKey: ["staff-roles-all"],
+    queryFn: async () => {
+      const { data } = await supabase.from("staff_roles").select("staff_id, role_label, is_primary");
+      return data ?? [];
+    },
+  });
+
+  const rolesByStaff = useMemo(() => {
+    const m: Record<string, string[]> = {};
+    (rolesQ.data ?? []).forEach((r: any) => {
+      if (r.is_primary) return;
+      (m[r.staff_id] ??= []).push(r.role_label);
+    });
+    return m;
+  }, [rolesQ.data]);
+    queryKey: ["staff"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("staff").select("*").order("last_name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const stats = useMemo(() => {
     const all = staffQ.data ?? [];
     const teachers = all.filter((s: any) => roleBucket(s.designation) === "teacher").length;
