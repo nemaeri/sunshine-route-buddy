@@ -52,6 +52,81 @@ export type Database = {
           },
         ]
       }
+      assessment_scores: {
+        Row: {
+          assessment_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          performance_level: string | null
+          recorded_by: string | null
+          score: number | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          assessment_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          performance_level?: string | null
+          recorded_by?: string | null
+          score?: number | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          assessment_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          performance_level?: string | null
+          recorded_by?: string | null
+          score?: number | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      assessments: {
+        Row: {
+          assessment_date: string
+          assessment_type: string
+          class_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          max_score: number
+          name: string
+          subject_id: string
+          term_id: string
+        }
+        Insert: {
+          assessment_date?: string
+          assessment_type?: string
+          class_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          max_score?: number
+          name: string
+          subject_id: string
+          term_id: string
+        }
+        Update: {
+          assessment_date?: string
+          assessment_type?: string
+          class_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          max_score?: number
+          name?: string
+          subject_id?: string
+          term_id?: string
+        }
+        Relationships: []
+      }
       attendance: {
         Row: {
           class_id: string | null
@@ -168,6 +243,180 @@ export type Database = {
           name?: string
           stream?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      fee_items: {
+        Row: {
+          amount: number
+          created_at: string
+          grade_level: string
+          id: string
+          item_name: string
+          term_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          grade_level: string
+          id?: string
+          item_name: string
+          term_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          grade_level?: string
+          id?: string
+          item_name?: string
+          term_id?: string
+        }
+        Relationships: []
+      }
+      invoices: {
+        Row: {
+          balance: number
+          created_at: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          status: string
+          student_id: string
+          term_id: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          student_id: string
+          term_id: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          student_id?: string
+          term_id?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          invoice_id: string
+          method: string
+          paid_on: string
+          recorded_by: string | null
+          reference: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          invoice_id: string
+          method?: string
+          paid_on?: string
+          recorded_by?: string | null
+          reference?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          method?: string
+          paid_on?: string
+          recorded_by?: string | null
+          reference?: string | null
+        }
+        Relationships: []
+      }
+      payroll_runs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          period_month: number
+          period_year: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          period_month: number
+          period_year: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          period_month?: number
+          period_year?: number
+          status?: string
+        }
+        Relationships: []
+      }
+      payslips: {
+        Row: {
+          allowances: number
+          basic_salary: number
+          created_at: string
+          gross_pay: number
+          housing_levy: number
+          id: string
+          net_pay: number
+          nhif: number
+          nssf: number
+          other_deductions: number
+          paye: number
+          payroll_run_id: string
+          staff_id: string
+        }
+        Insert: {
+          allowances?: number
+          basic_salary?: number
+          created_at?: string
+          gross_pay?: number
+          housing_levy?: number
+          id?: string
+          net_pay?: number
+          nhif?: number
+          nssf?: number
+          other_deductions?: number
+          paye?: number
+          payroll_run_id: string
+          staff_id: string
+        }
+        Update: {
+          allowances?: number
+          basic_salary?: number
+          created_at?: string
+          gross_pay?: number
+          housing_levy?: number
+          id?: string
+          net_pay?: number
+          nhif?: number
+          nssf?: number
+          other_deductions?: number
+          paye?: number
+          payroll_run_id?: string
+          staff_id?: string
         }
         Relationships: []
       }
@@ -570,6 +819,36 @@ export type Database = {
           grade_levels?: string[]
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      terms: {
+        Row: {
+          academic_year: number
+          created_at: string
+          end_date: string
+          id: string
+          is_current: boolean
+          start_date: string
+          term_number: number
+        }
+        Insert: {
+          academic_year: number
+          created_at?: string
+          end_date: string
+          id?: string
+          is_current?: boolean
+          start_date: string
+          term_number: number
+        }
+        Update: {
+          academic_year?: number
+          created_at?: string
+          end_date?: string
+          id?: string
+          is_current?: boolean
+          start_date?: string
+          term_number?: number
         }
         Relationships: []
       }
