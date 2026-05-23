@@ -249,26 +249,38 @@ export type Database = {
       fee_items: {
         Row: {
           amount: number
+          applies_to: string
           created_at: string
-          grade_level: string
+          grade_from: string | null
+          grade_level: string | null
+          grade_to: string | null
           id: string
           item_name: string
+          kind: string
           term_id: string
         }
         Insert: {
           amount?: number
+          applies_to?: string
           created_at?: string
-          grade_level: string
+          grade_from?: string | null
+          grade_level?: string | null
+          grade_to?: string | null
           id?: string
           item_name: string
+          kind?: string
           term_id: string
         }
         Update: {
           amount?: number
+          applies_to?: string
           created_at?: string
-          grade_level?: string
+          grade_from?: string | null
+          grade_level?: string | null
+          grade_to?: string | null
           id?: string
           item_name?: string
+          kind?: string
           term_id?: string
         }
         Relationships: []
