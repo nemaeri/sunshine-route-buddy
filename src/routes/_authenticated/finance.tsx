@@ -123,6 +123,8 @@ function InvoiceRow({ invoice, canManage, userId }: { invoice: any; canManage: b
       toast.success("Payment recorded");
       setOpen(false); setAmount(""); setReference("");
       qc.invalidateQueries({ queryKey: ["invoices"] });
+      qc.invalidateQueries({ queryKey: ["all-payments"] });
+      qc.invalidateQueries({ queryKey: ["fin-overview"] });
     },
     onError: (e: any) => toast.error(e.message ?? "Failed"),
   });
