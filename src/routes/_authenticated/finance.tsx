@@ -30,13 +30,21 @@ function FinancePage() {
   const invoicesQ = useQuery({
     queryKey: ["invoices"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const inv = await supabase
         .from("invoices")
-        .select("id, total_amount, balance, due_date, status, created_at, student_id, term_id, students:student_id(first_name, last_name, admission_no), terms:term_id(academic_year, term_number)")
+        .select("id, total_amount, balance, due_date, status, created_at, student_id, term_id")
         .order("created_at", { ascending: false })
         .limit(100);
-      if (error) throw error;
-      return data ?? [];
+      if (inv.error) throw inv.error;
+      const ids = (inv.data ?? []).map((i) => i.student_id);
+      const tids = (inv.data ?? []).map((i) => i.term_id);
+      const [st, te] = await Promise.all([
+        ids.length ? supabase.from("students").select("id, first_name, last_name, admission_no").in("id", ids) : Promise.resolve({ data: [] as any[] }),
+        tids.length ? supabase.from("terms").select("id, academic_year, term_number").in("id", tids) : Promise.resolve({ data: [] as any[] }),
+      ]);
+      const sm = new Map((st.data ?? []).map((x: any) => [x.id, x]));
+      const tm = new Map((te.data ?? []).map((x: any) => [x.id, x]));
+      return (inv.data ?? []).map((i: any) => ({ ...i, students: sm.get(i.student_id), terms: tm.get(i.term_id) }));
     },
   });
 
