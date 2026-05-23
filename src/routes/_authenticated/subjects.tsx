@@ -19,7 +19,9 @@ export const Route = createFileRoute("/_authenticated/subjects")({
 });
 
 const GRADE_LEVELS = [
-  "Pre-primary (PP)",
+  "Play Group",
+  "PP1",
+  "PP2",
   ...Array.from({ length: 12 }, (_, i) => `Grade ${i + 1}`),
 ];
 
