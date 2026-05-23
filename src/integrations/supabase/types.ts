@@ -312,6 +312,72 @@ export type Database = {
         }
         Relationships: []
       }
+      leave_entitlements: {
+        Row: {
+          carried_over_days: number
+          created_at: string
+          entitled_days: number | null
+          id: string
+          leave_type: string
+          note: string | null
+          staff_id: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          carried_over_days?: number
+          created_at?: string
+          entitled_days?: number | null
+          id?: string
+          leave_type: string
+          note?: string | null
+          staff_id: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          carried_over_days?: number
+          created_at?: string
+          entitled_days?: number | null
+          id?: string
+          leave_type?: string
+          note?: string | null
+          staff_id?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      leave_policies: {
+        Row: {
+          carryover_pct: number
+          created_at: string
+          default_days: number | null
+          id: string
+          leave_type: string
+          max_carryover_days: number | null
+          updated_at: string
+        }
+        Insert: {
+          carryover_pct?: number
+          created_at?: string
+          default_days?: number | null
+          id?: string
+          leave_type: string
+          max_carryover_days?: number | null
+          updated_at?: string
+        }
+        Update: {
+          carryover_pct?: number
+          created_at?: string
+          default_days?: number | null
+          id?: string
+          leave_type?: string
+          max_carryover_days?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leave_requests: {
         Row: {
           created_at: string
@@ -359,6 +425,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "leave_requests_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "leave_balances"
+            referencedColumns: ["staff_id"]
+          },
           {
             foreignKeyName: "leave_requests_staff_id_fkey"
             columns: ["staff_id"]
@@ -664,6 +737,13 @@ export type Database = {
           staff_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "staff_roles_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "leave_balances"
+            referencedColumns: ["staff_id"]
+          },
           {
             foreignKeyName: "staff_roles_staff_id_fkey"
             columns: ["staff_id"]
@@ -1011,7 +1091,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      leave_balances: {
+        Row: {
+          carried_over_days: number | null
+          entitled_days: number | null
+          leave_type: string | null
+          remaining_days: number | null
+          staff_id: string | null
+          used_days: number | null
+          year: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {

@@ -64,6 +64,29 @@ function MyLeavePage() {
     },
   });
 
+  const currentYear = new Date().getFullYear();
+  const balancesQ = useQuery({
+    queryKey: ["leave-balances", staffId, currentYear],
+    enabled: !!staffId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("leave_balances")
+        .select("*")
+        .eq("staff_id", staffId)
+        .eq("year", currentYear);
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        leave_type: string; entitled_days: number | null; carried_over_days: number;
+        used_days: number; remaining_days: number | null;
+      }>;
+    },
+  });
+
+  const currentBalance = useMemo(
+    () => (balancesQ.data ?? []).find((b) => b.leave_type === leaveType),
+    [balancesQ.data, leaveType],
+  );
+
   const days = useMemo(() => daysBetween(startDate, endDate), [startDate, endDate]);
 
   const submitM = useMutation({
@@ -86,6 +109,7 @@ function MyLeavePage() {
       toast.success("Leave request submitted");
       qc.invalidateQueries({ queryKey: ["my-leave"] });
       qc.invalidateQueries({ queryKey: ["leave-requests"] });
+      qc.invalidateQueries({ queryKey: ["leave-balances"] });
       setOpen(false);
       setStartDate(""); setEndDate(""); setReason(""); setLeaveType("annual");
     },
@@ -101,6 +125,7 @@ function MyLeavePage() {
       toast.success("Request cancelled");
       qc.invalidateQueries({ queryKey: ["my-leave"] });
       qc.invalidateQueries({ queryKey: ["leave-requests"] });
+      qc.invalidateQueries({ queryKey: ["leave-balances"] });
     },
     onError: (e: any) => toast.error(e.message ?? "Failed"),
   });
@@ -146,6 +171,15 @@ function MyLeavePage() {
                     >
                       {LEAVE_TYPES.map((t) => <option key={t} value={t} className="capitalize">{t}</option>)}
                     </select>
+                    {staffId && currentBalance ? (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {currentBalance.remaining_days === null
+                          ? "No limit (unpaid)"
+                          : <>Remaining this year: <span className="font-medium text-foreground">{currentBalance.remaining_days}</span> / {(currentBalance.entitled_days ?? 0) + currentBalance.carried_over_days} day(s)</>}
+                      </div>
+                    ) : !staffId ? (
+                      <div className="text-xs text-muted-foreground mt-1">Select a staff member to see balance</div>
+                    ) : null}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -196,6 +230,28 @@ function MyLeavePage() {
           </div>
         </div>
       </Card>
+
+      {staffId && (balancesQ.data?.length ?? 0) > 0 ? (
+        <Card className="p-4 mb-4">
+          <div className="text-sm font-medium mb-3">Leave balances — {currentYear}</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {(balancesQ.data ?? []).map((b) => (
+              <div key={b.leave_type} className="rounded-md border border-border p-2">
+                <div className="text-xs text-muted-foreground capitalize">{b.leave_type}</div>
+                <div className="text-lg font-semibold">
+                  {b.remaining_days === null ? "∞" : b.remaining_days}
+                  <span className="text-xs font-normal text-muted-foreground ml-1">
+                    / {b.entitled_days === null ? "∞" : (b.entitled_days + b.carried_over_days)}
+                  </span>
+                </div>
+                <div className="text-[11px] text-muted-foreground">
+                  Used {b.used_days}{b.carried_over_days ? ` · +${b.carried_over_days} carryover` : ""}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : null}
 
       <Card className="overflow-hidden">
         <table className="w-full text-sm">
