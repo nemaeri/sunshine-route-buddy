@@ -122,6 +122,10 @@ function StudentsPage() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            <ImportStudentsDialog
+              classes={classesQ.data ?? []}
+              onImported={() => qc.invalidateQueries({ queryKey: ["students-full"] })}
+            />
             <EnrollStudentDialog
               classes={classesQ.data ?? []}
               onCreated={() => qc.invalidateQueries({ queryKey: ["students-full"] })}
