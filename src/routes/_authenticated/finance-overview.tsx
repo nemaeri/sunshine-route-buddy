@@ -56,7 +56,7 @@ function FinanceOverviewPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("invoices")
-        .select("id, student_id, total_amount, balance");
+        .select("id, student_id, total_amount, balance, student:students(first_name, last_name, admission_no, class:classes(name))");
       if (error) throw error;
       return data || [];
     },
@@ -117,27 +117,51 @@ function FinanceOverviewPage() {
   });
 
   const stats = useMemo(() => {
-    const invs = invoicesQ.data || [];
+    const invs = (invoicesQ.data || []) as any[];
     let collected = 0;
     let outstanding = 0;
-    const studentTotal = new Map<string, number>();
-    const studentBal = new Map<string, number>();
+    type SAgg = {
+      id: string;
+      name: string;
+      admission: string;
+      className: string;
+      total: number;
+      balance: number;
+    };
+    const byStudent = new Map<string, SAgg>();
     for (const i of invs) {
       const total = Number(i.total_amount || 0);
       const bal = Number(i.balance || 0);
       collected += Math.max(0, total - bal);
       outstanding += bal;
-      studentTotal.set(i.student_id, (studentTotal.get(i.student_id) || 0) + total);
-      studentBal.set(i.student_id, (studentBal.get(i.student_id) || 0) + bal);
+      const s = i.student;
+      const agg = byStudent.get(i.student_id) || {
+        id: i.student_id,
+        name: s ? `${s.first_name} ${s.last_name}` : "Unknown",
+        admission: s?.admission_no || "—",
+        className: s?.class?.name || "—",
+        total: 0,
+        balance: 0,
+      };
+      agg.total += total;
+      agg.balance += bal;
+      byStudent.set(i.student_id, agg);
     }
-    let cleared = 0;
-    let defaulters = 0;
-    for (const [sid, total] of studentTotal) {
-      const bal = studentBal.get(sid) || 0;
-      if (total > 0 && bal <= 0) cleared += 1;
-      if (bal > 0) defaulters += 1;
-    }
-    return { collected, outstanding, cleared, defaulters };
+    const all = Array.from(byStudent.values());
+    const clearedList = all
+      .filter((s) => s.total > 0 && s.balance <= 0)
+      .sort((a, b) => b.total - a.total);
+    const defaultersList = all
+      .filter((s) => s.balance > 0)
+      .sort((a, b) => b.balance - a.balance);
+    return {
+      collected,
+      outstanding,
+      cleared: clearedList.length,
+      defaulters: defaultersList.length,
+      clearedList,
+      defaultersList,
+    };
   }, [invoicesQ.data]);
 
   const maxGrade = Math.max(1, ...(gradeCollectionQ.data || []).map((g) => g.total));
@@ -306,6 +330,100 @@ function FinanceOverviewPage() {
               ))}
             </div>
           )}
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+        <Card>
+          <div className="flex items-center justify-between p-5 border-b border-border">
+            <div>
+              <div className="font-display font-bold">Defaulters</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Students with an outstanding balance
+              </div>
+            </div>
+            <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700 font-semibold">
+              {stats.defaultersList?.length || 0}
+            </span>
+          </div>
+          <div className="overflow-x-auto max-h-96">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-card">
+                <tr className="text-xs uppercase text-muted-foreground border-b border-border">
+                  <th className="text-left font-medium px-5 py-3">Student</th>
+                  <th className="text-left font-medium px-5 py-3">Adm. No</th>
+                  <th className="text-left font-medium px-5 py-3">Class</th>
+                  <th className="text-right font-medium px-5 py-3">Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(stats.defaultersList || []).length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-5 py-6 text-center text-muted-foreground">
+                      No defaulters
+                    </td>
+                  </tr>
+                ) : (
+                  stats.defaultersList!.map((s) => (
+                    <tr key={s.id} className="border-b border-border last:border-0">
+                      <td className="px-5 py-3 font-medium">{s.name}</td>
+                      <td className="px-5 py-3 text-muted-foreground">{s.admission}</td>
+                      <td className="px-5 py-3 text-muted-foreground">{s.className}</td>
+                      <td className="px-5 py-3 text-right text-rose-600 font-semibold">
+                        {KES(s.balance)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-center justify-between p-5 border-b border-border">
+            <div>
+              <div className="font-display font-bold">Students cleared</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Fully paid for current invoices
+              </div>
+            </div>
+            <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-semibold">
+              {stats.clearedList?.length || 0}
+            </span>
+          </div>
+          <div className="overflow-x-auto max-h-96">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-card">
+                <tr className="text-xs uppercase text-muted-foreground border-b border-border">
+                  <th className="text-left font-medium px-5 py-3">Student</th>
+                  <th className="text-left font-medium px-5 py-3">Adm. No</th>
+                  <th className="text-left font-medium px-5 py-3">Class</th>
+                  <th className="text-right font-medium px-5 py-3">Paid</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(stats.clearedList || []).length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-5 py-6 text-center text-muted-foreground">
+                      No cleared students yet
+                    </td>
+                  </tr>
+                ) : (
+                  stats.clearedList!.map((s) => (
+                    <tr key={s.id} className="border-b border-border last:border-0">
+                      <td className="px-5 py-3 font-medium">{s.name}</td>
+                      <td className="px-5 py-3 text-muted-foreground">{s.admission}</td>
+                      <td className="px-5 py-3 text-muted-foreground">{s.className}</td>
+                      <td className="px-5 py-3 text-right text-emerald-600 font-semibold">
+                        {KES(s.total)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </Card>
       </div>
     </>
