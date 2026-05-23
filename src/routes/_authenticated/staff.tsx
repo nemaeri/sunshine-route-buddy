@@ -32,6 +32,22 @@ const SUPPORT_JOBS = [
   "Driver", "Bus Assistant", "Transport Manager",
   "Nurse", "Receptionist", "Storekeeper", "Other",
 ];
+const ALL_JOB_OPTIONS = [
+  "Teacher", "Head Teacher", "Deputy Head", "Accountant",
+  ...SUPPORT_JOBS.filter((j) => j !== "Other"),
+];
+
+async function syncRoles(staffId: string, primary: string, extras: string[]) {
+  await supabase.from("staff_roles").delete().eq("staff_id", staffId);
+  const rows = [
+    { staff_id: staffId, role_label: primary, is_primary: true },
+    ...extras
+      .filter((r) => r && r !== primary)
+      .map((r) => ({ staff_id: staffId, role_label: r, is_primary: false })),
+  ];
+  if (rows.length) await supabase.from("staff_roles").insert(rows);
+}
+
 
 function roleBucket(designation: string | null | undefined): "teacher" | "accountant" | "support" | "admin" {
   const d = (designation ?? "").toLowerCase();
@@ -54,6 +70,23 @@ function StaffPage() {
       return data ?? [];
     },
   });
+
+  const rolesQ = useQuery({
+    queryKey: ["staff-roles-all"],
+    queryFn: async () => {
+      const { data } = await supabase.from("staff_roles").select("staff_id, role_label, is_primary");
+      return data ?? [];
+    },
+  });
+
+  const rolesByStaff = useMemo(() => {
+    const m: Record<string, string[]> = {};
+    (rolesQ.data ?? []).forEach((r: any) => {
+      if (r.is_primary) return;
+      (m[r.staff_id] ??= []).push(r.role_label);
+    });
+    return m;
+  }, [rolesQ.data]);
 
   const stats = useMemo(() => {
     const all = staffQ.data ?? [];
@@ -81,7 +114,10 @@ function StaffPage() {
     return rows;
   }, [staffQ.data, tab, search]);
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["staff"] });
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["staff"] });
+    qc.invalidateQueries({ queryKey: ["staff-roles-all"] });
+  };
 
   return (
     <>
@@ -154,9 +190,16 @@ function StaffPage() {
                 <tr key={s.id} className="border-b border-border last:border-0 hover:bg-muted/30">
                   <td className="px-5 py-4 font-medium">{s.first_name} {s.last_name}</td>
                   <td className="px-5 py-4">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
-                      {s.designation || "—"}
-                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
+                        {s.designation || "—"}
+                      </span>
+                      {(rolesByStaff[s.id] ?? []).map((r) => (
+                        <span key={r} className="inline-flex items-center px-2.5 py-1 rounded-full bg-violet-50 text-violet-700 text-xs font-medium border border-violet-100">
+                          +{r}
+                        </span>
+                      ))}
+                    </div>
                   </td>
                   <td className="px-5 py-4 text-muted-foreground">{s.email || "—"}</td>
                   <td className="px-5 py-4 text-muted-foreground">{s.phone || "—"}</td>
@@ -219,11 +262,13 @@ type StaffForm = {
   national_id: string;
   support_job: string;
   support_job_other: string;
+  extra_roles: string[];
 };
 
 const emptyForm: StaffForm = {
   first_name: "", last_name: "", role: "Teacher", phone: "", email: "",
   subjects: [], assigned_classes: [], national_id: "", support_job: "Cleaner", support_job_other: "",
+  extra_roles: [],
 };
 
 function StaffFormFields({ form, setForm, classes }: {
@@ -340,6 +385,31 @@ function StaffFormFields({ form, setForm, classes }: {
       )}
 
       <div>
+        <Label>Additional Roles (optional)</Label>
+        <p className="text-xs text-muted-foreground mt-1 mb-2">
+          Tap any extra jobs this person also handles (e.g. a Driver who's also Transport Manager).
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {ALL_JOB_OPTIONS.map((j) => {
+            const active = form.extra_roles.includes(j);
+            return (
+              <button
+                key={j}
+                type="button"
+                onClick={() => setForm({
+                  ...form,
+                  extra_roles: active ? form.extra_roles.filter((x) => x !== j) : [...form.extra_roles, j],
+                })}
+                className={`px-3 py-1.5 rounded-md border text-sm transition-colors ${active ? "bg-violet-600 text-white border-violet-600" : "bg-background border-input hover:bg-muted"}`}
+              >
+                {j}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
         <Label>ID / National ID No.</Label>
         <Input className="mt-1.5" placeholder="e.g. 12345678" value={form.national_id} onChange={(e) => setForm({ ...form, national_id: e.target.value })} />
       </div>
@@ -378,7 +448,7 @@ function NewStaffDialog({ onDone }: { onDone: () => void }) {
       const seq = String((existing as any)?.length ?? Date.now() % 10000).padStart(4, "0");
       const staff_no = `STF-${seq}`;
       const { designation, department } = buildPayload(form);
-      const { error } = await supabase.from("staff").insert({
+      const { data: inserted, error } = await supabase.from("staff").insert({
         first_name: form.first_name,
         last_name: form.last_name,
         staff_no,
@@ -387,8 +457,9 @@ function NewStaffDialog({ onDone }: { onDone: () => void }) {
         email: form.email || null,
         phone: form.phone || null,
         kra_pin: form.national_id || null,
-      });
+      }).select("id").single();
       if (error) throw error;
+      if (inserted?.id) await syncRoles(inserted.id, designation, form.extra_roles);
     },
     onSuccess: () => { toast.success("Staff added"); setOpen(false); setForm(emptyForm); onDone(); },
     onError: (e: any) => toast.error(e.message ?? "Failed"),
@@ -451,6 +522,17 @@ function EditStaffDialog({ staff, onDone }: { staff: any; onDone: () => void }) 
     queryFn: async () => (await supabase.from("classes").select("id, name").order("name")).data ?? [],
   });
 
+  useQuery({
+    queryKey: ["staff-roles", staff.id, open],
+    enabled: open,
+    queryFn: async () => {
+      const { data } = await supabase.from("staff_roles").select("role_label, is_primary").eq("staff_id", staff.id);
+      const extras = (data ?? []).filter((r: any) => !r.is_primary).map((r: any) => r.role_label);
+      setForm((f) => ({ ...f, extra_roles: extras }));
+      return data ?? [];
+    },
+  });
+
   const m = useMutation({
     mutationFn: async () => {
       const { designation, department } = buildPayload(form);
@@ -464,6 +546,7 @@ function EditStaffDialog({ staff, onDone }: { staff: any; onDone: () => void }) 
         kra_pin: form.national_id || null,
       }).eq("id", staff.id);
       if (error) throw error;
+      await syncRoles(staff.id, designation, form.extra_roles);
     },
     onSuccess: () => { toast.success("Staff updated"); setOpen(false); onDone(); },
     onError: (e: any) => toast.error(e.message ?? "Failed"),

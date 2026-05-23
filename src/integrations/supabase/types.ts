@@ -585,6 +585,38 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_roles: {
+        Row: {
+          created_at: string
+          id: string
+          is_primary: boolean
+          role_label: string
+          staff_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          role_label: string
+          staff_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          role_label?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_roles_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stop_events: {
         Row: {
           assignment_id: string
