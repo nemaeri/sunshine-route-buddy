@@ -654,6 +654,63 @@ export type Database = {
         }
         Relationships: []
       }
+      school_settings: {
+        Row: {
+          bank_details: string | null
+          created_at: string
+          current_term_id: string | null
+          email: string | null
+          footer_text: string | null
+          id: string
+          logo_url: string | null
+          motto: string | null
+          name: string
+          p_o_box: string | null
+          paybill: string | null
+          phone: string | null
+          tagline: string | null
+          theme_color: string | null
+          town: string | null
+          updated_at: string
+        }
+        Insert: {
+          bank_details?: string | null
+          created_at?: string
+          current_term_id?: string | null
+          email?: string | null
+          footer_text?: string | null
+          id?: string
+          logo_url?: string | null
+          motto?: string | null
+          name?: string
+          p_o_box?: string | null
+          paybill?: string | null
+          phone?: string | null
+          tagline?: string | null
+          theme_color?: string | null
+          town?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bank_details?: string | null
+          created_at?: string
+          current_term_id?: string | null
+          email?: string | null
+          footer_text?: string | null
+          id?: string
+          logo_url?: string | null
+          motto?: string | null
+          name?: string
+          p_o_box?: string | null
+          paybill?: string | null
+          phone?: string | null
+          tagline?: string | null
+          theme_color?: string | null
+          town?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       staff: {
         Row: {
           active: boolean
@@ -1122,7 +1179,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "teacher" | "parent" | "driver" | "finance"
+      app_role:
+        | "admin"
+        | "teacher"
+        | "parent"
+        | "driver"
+        | "finance"
+        | "head_teacher"
       attendance_status: "present" | "absent" | "late" | "excused"
       gender: "male" | "female"
     }
@@ -1252,7 +1315,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "teacher", "parent", "driver", "finance"],
+      app_role: [
+        "admin",
+        "teacher",
+        "parent",
+        "driver",
+        "finance",
+        "head_teacher",
+      ],
       attendance_status: ["present", "absent", "late", "excused"],
       gender: ["male", "female"],
     },
