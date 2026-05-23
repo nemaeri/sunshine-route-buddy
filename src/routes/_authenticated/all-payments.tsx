@@ -9,9 +9,13 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { Upload, Download, Printer } from "lucide-react";
+import { Upload, Download, Printer, Plus } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/all-payments")({
   component: AllPaymentsPage,
@@ -173,6 +177,7 @@ function AllPaymentsPage() {
             <Button variant="outline" onClick={exportCsv}><Download className="size-4 mr-1" /> Export CSV</Button>
             {canManage && <CsvTemplateButton />}
             {canManage && <BulkImportDialog onDone={() => qc.invalidateQueries({ queryKey: ["all-payments"] })} userId={user?.id ?? null} />}
+            {canManage && <RecordPaymentDialog onDone={() => qc.invalidateQueries({ queryKey: ["all-payments"] })} userId={user?.id ?? null} />}
           </div>
         }
       />
@@ -199,14 +204,13 @@ function AllPaymentsPage() {
           </div>
           <div>
             <Label className="text-xs">Category</Label>
-            <select
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              <option value="">All categories</option>
-              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
+            <Select value={category || "__all"} onValueChange={(v) => setCategory(v === "__all" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="All categories" /></SelectTrigger>
+              <SelectContent className="max-h-72">
+                <SelectItem value="__all">All categories</SelectItem>
+                {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label className="text-xs">From</Label>
@@ -541,6 +545,118 @@ function BulkImportDialog({ onDone, userId }: { onDone: () => void; userId: stri
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Close</Button>
           <Button onClick={run} disabled={!rows.length || busy}>{busy ? "Importing…" : `Import ${rows.length} row(s)`}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RecordPaymentDialog({ onDone, userId }: { onDone: () => void; userId: string | null }) {
+  const [open, setOpen] = useState(false);
+  const [invoiceId, setInvoiceId] = useState("");
+  const [amount, setAmount] = useState("");
+  const [method, setMethod] = useState("mpesa");
+  const [reference, setReference] = useState("");
+  const [paidOn, setPaidOn] = useState(new Date().toISOString().slice(0, 10));
+
+  const invoicesQ = useQuery({
+    queryKey: ["unpaid-invoices-record"],
+    enabled: open,
+    queryFn: async () => {
+      const r = await supabase
+        .from("invoices")
+        .select("id, total_amount, balance, student_id, term_id, notes")
+        .gt("balance", 0)
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (r.error) throw r.error;
+      const sIds = Array.from(new Set((r.data ?? []).map((i) => i.student_id)));
+      const tIds = Array.from(new Set((r.data ?? []).map((i) => i.term_id)));
+      const [st, te] = await Promise.all([
+        sIds.length ? supabase.from("students").select("id, first_name, last_name, admission_no").in("id", sIds) : Promise.resolve({ data: [] as any[] }),
+        tIds.length ? supabase.from("terms").select("id, academic_year, term_number").in("id", tIds) : Promise.resolve({ data: [] as any[] }),
+      ]);
+      const sm = new Map((st.data ?? []).map((x: any) => [x.id, x]));
+      const tm = new Map((te.data ?? []).map((x: any) => [x.id, x]));
+      return (r.data ?? []).map((i: any) => ({ ...i, student: sm.get(i.student_id), term: tm.get(i.term_id) }));
+    },
+  });
+
+  const selected = invoicesQ.data?.find((i: any) => i.id === invoiceId);
+
+  const m = useMutation({
+    mutationFn: async () => {
+      if (!selected) throw new Error("Select an invoice");
+      const amt = Number(amount);
+      if (!amt || amt <= 0) throw new Error("Enter an amount");
+      const { error } = await supabase.from("payments").insert({
+        invoice_id: selected.id, amount: amt, method, reference: reference || null,
+        paid_on: paidOn, recorded_by: userId,
+      });
+      if (error) throw error;
+      const newBal = Math.max(0, Number(selected.balance) - amt);
+      const newStatus = newBal === 0 ? "paid" : "partial";
+      await supabase.from("invoices").update({ balance: newBal, status: newStatus }).eq("id", selected.id);
+    },
+    onSuccess: () => {
+      toast.success("Payment recorded");
+      setOpen(false); setAmount(""); setReference(""); setInvoiceId("");
+      onDone();
+    },
+    onError: (e: any) => toast.error(e.message ?? "Failed"),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button><Plus className="size-4 mr-1" /> Record payment</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>Record payment</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Invoice (student · term · balance)</Label>
+            <Select value={invoiceId} onValueChange={setInvoiceId}>
+              <SelectTrigger><SelectValue placeholder={invoicesQ.isLoading ? "Loading…" : "Select an unpaid invoice"} /></SelectTrigger>
+              <SelectContent className="max-h-72">
+                {invoicesQ.data?.map((i: any) => (
+                  <SelectItem key={i.id} value={i.id}>
+                    {i.student ? `${i.student.first_name} ${i.student.last_name} (${i.student.admission_no})` : "—"}
+                    {i.term ? ` · ${i.term.academic_year} T${i.term.term_number}` : ""}
+                    {` · ${kes(Number(i.balance))}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selected && (
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Outstanding {kes(Number(selected.balance))} of {kes(Number(selected.total_amount))}
+              </p>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Amount (KES)</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
+            <div><Label>Paid on</Label><Input type="date" value={paidOn} onChange={(e) => setPaidOn(e.target.value)} /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Method</Label>
+              <Select value={method} onValueChange={setMethod}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mpesa">M-Pesa</SelectItem>
+                  <SelectItem value="bank">Bank transfer</SelectItem>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Reference</Label><Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="QGH8X1..." /></div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={() => m.mutate()} disabled={m.isPending || !invoiceId}>{m.isPending ? "Saving…" : "Save payment"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
