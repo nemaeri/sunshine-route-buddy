@@ -531,6 +531,11 @@ export type Database = {
           nhif: number
           nssf: number
           other_deductions: number
+          paid_amount: number | null
+          paid_by: string | null
+          paid_method: string | null
+          paid_on: string | null
+          paid_reference: string | null
           paye: number
           payroll_run_id: string
           staff_id: string
@@ -546,6 +551,11 @@ export type Database = {
           nhif?: number
           nssf?: number
           other_deductions?: number
+          paid_amount?: number | null
+          paid_by?: string | null
+          paid_method?: string | null
+          paid_on?: string | null
+          paid_reference?: string | null
           paye?: number
           payroll_run_id: string
           staff_id: string
@@ -561,6 +571,11 @@ export type Database = {
           nhif?: number
           nssf?: number
           other_deductions?: number
+          paid_amount?: number | null
+          paid_by?: string | null
+          paid_method?: string | null
+          paid_on?: string | null
+          paid_reference?: string | null
           paye?: number
           payroll_run_id?: string
           staff_id?: string
