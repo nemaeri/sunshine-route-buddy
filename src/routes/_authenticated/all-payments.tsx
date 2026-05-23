@@ -245,7 +245,7 @@ function AllPaymentsPage() {
               {rows.map((p: any) => (
                 <tr key={p.id} className="hover:bg-secondary/20">
                   <td className="px-4 py-3 whitespace-nowrap">{new Date(p.paid_on).toLocaleDateString()} · {new Date(p.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
-                  <td className="px-4 py-3"><span className="text-primary underline">{receiptNo(p)}</span></td>
+                  <td className="px-4 py-3"><button onClick={() => setReceiptId(p.id)} className="text-primary underline hover:opacity-80">{receiptNo(p)}</button></td>
                   <td className="px-4 py-3">
                     <div className="font-medium">{p.student ? `${p.student.first_name} ${p.student.last_name}` : "—"}</div>
                     <div className="text-[11px] text-muted-foreground">{p.student?.admission_no}</div>
