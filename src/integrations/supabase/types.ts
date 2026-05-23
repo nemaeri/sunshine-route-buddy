@@ -353,6 +353,7 @@ export type Database = {
           carryover_pct: number
           created_at: string
           default_days: number | null
+          employment_type: Database["public"]["Enums"]["employment_type"]
           id: string
           leave_type: string
           max_carryover_days: number | null
@@ -363,6 +364,7 @@ export type Database = {
           carryover_pct?: number
           created_at?: string
           default_days?: number | null
+          employment_type?: Database["public"]["Enums"]["employment_type"]
           id?: string
           leave_type: string
           max_carryover_days?: number | null
@@ -373,6 +375,7 @@ export type Database = {
           carryover_pct?: number
           created_at?: string
           default_days?: number | null
+          employment_type?: Database["public"]["Enums"]["employment_type"]
           id?: string
           leave_type?: string
           max_carryover_days?: number | null
@@ -722,6 +725,7 @@ export type Database = {
           department: string | null
           designation: string | null
           email: string | null
+          employment_type: Database["public"]["Enums"]["employment_type"]
           first_name: string
           hired_on: string | null
           id: string
@@ -742,6 +746,7 @@ export type Database = {
           department?: string | null
           designation?: string | null
           email?: string | null
+          employment_type?: Database["public"]["Enums"]["employment_type"]
           first_name: string
           hired_on?: string | null
           id?: string
@@ -762,6 +767,7 @@ export type Database = {
           department?: string | null
           designation?: string | null
           email?: string | null
+          employment_type?: Database["public"]["Enums"]["employment_type"]
           first_name?: string
           hired_on?: string | null
           id?: string
@@ -1193,6 +1199,7 @@ export type Database = {
         | "finance"
         | "head_teacher"
       attendance_status: "present" | "absent" | "late" | "excused"
+      employment_type: "permanent" | "contract"
       gender: "male" | "female"
       staff_category: "teaching" | "non_teaching" | "support"
     }
@@ -1331,6 +1338,7 @@ export const Constants = {
         "head_teacher",
       ],
       attendance_status: ["present", "absent", "late", "excused"],
+      employment_type: ["permanent", "contract"],
       gender: ["male", "female"],
       staff_category: ["teaching", "non_teaching", "support"],
     },
