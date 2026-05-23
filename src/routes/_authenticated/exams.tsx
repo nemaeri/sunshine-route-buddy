@@ -110,11 +110,14 @@ function GradebookPanel({ assessmentId, canEdit, userId }: { assessmentId: strin
     queryFn: async () => {
       const { data, error } = await supabase
         .from("assessments")
-        .select("id, name, max_score, class_id, subjects:subject_id(name)")
+        .select("id, name, max_score, class_id, subject_id")
         .eq("id", assessmentId)
         .single();
       if (error) throw error;
-      return data;
+      const sub = data.subject_id
+        ? (await supabase.from("subjects").select("name").eq("id", data.subject_id).maybeSingle()).data
+        : null;
+      return { ...data, subjects: sub };
     },
   });
 
