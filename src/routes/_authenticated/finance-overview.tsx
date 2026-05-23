@@ -56,7 +56,7 @@ function FinanceOverviewPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("invoices")
-        .select("id, student_id, total_amount, balance");
+        .select("id, student_id, total_amount, balance, student:students(first_name, last_name, admission_no, class:classes(name))");
       if (error) throw error;
       return data || [];
     },
