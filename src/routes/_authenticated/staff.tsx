@@ -29,7 +29,8 @@ const SUBJECTS = [
 
 const SUPPORT_JOBS = [
   "Cleaner", "Cook", "Security Guard", "Groundskeeper",
-  "Driver", "Bus Matron", "Nurse", "Receptionist", "Storekeeper", "Other",
+  "Driver", "Bus Assistant", "Transport Manager",
+  "Nurse", "Receptionist", "Storekeeper", "Other",
 ];
 
 function roleBucket(designation: string | null | undefined): "teacher" | "accountant" | "support" | "admin" {
