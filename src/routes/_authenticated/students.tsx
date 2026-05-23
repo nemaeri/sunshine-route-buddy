@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { toast } from "sonner";
-import { Plus, Search, CreditCard, Pencil, Save } from "lucide-react";
+import { Plus, Search, CreditCard, Pencil, Save, Upload, Download } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/students")({
   component: StudentsPage,
