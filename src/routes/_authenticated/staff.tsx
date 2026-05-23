@@ -87,13 +87,6 @@ function StaffPage() {
     });
     return m;
   }, [rolesQ.data]);
-    queryKey: ["staff"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("staff").select("*").order("last_name");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
 
   const stats = useMemo(() => {
     const all = staffQ.data ?? [];
