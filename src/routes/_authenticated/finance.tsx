@@ -64,7 +64,7 @@ function FinancePage() {
         title="Financial Records"
         description="Fee invoices, payments, and outstanding balances"
         actions={canManage ? (
-          <NewInvoiceDialog onDone={() => qc.invalidateQueries({ queryKey: ["invoices"] })} />
+          <NewInvoiceDialog onDone={() => { qc.invalidateQueries({ queryKey: ["invoices"] }); qc.invalidateQueries({ queryKey: ["fin-overview"] }); }} />
         ) : null}
       />
 
