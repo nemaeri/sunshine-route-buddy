@@ -332,6 +332,100 @@ function FinanceOverviewPage() {
           )}
         </Card>
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+        <Card>
+          <div className="flex items-center justify-between p-5 border-b border-border">
+            <div>
+              <div className="font-display font-bold">Defaulters</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Students with an outstanding balance
+              </div>
+            </div>
+            <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700 font-semibold">
+              {stats.defaultersList?.length || 0}
+            </span>
+          </div>
+          <div className="overflow-x-auto max-h-96">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-card">
+                <tr className="text-xs uppercase text-muted-foreground border-b border-border">
+                  <th className="text-left font-medium px-5 py-3">Student</th>
+                  <th className="text-left font-medium px-5 py-3">Adm. No</th>
+                  <th className="text-left font-medium px-5 py-3">Class</th>
+                  <th className="text-right font-medium px-5 py-3">Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(stats.defaultersList || []).length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-5 py-6 text-center text-muted-foreground">
+                      No defaulters
+                    </td>
+                  </tr>
+                ) : (
+                  stats.defaultersList!.map((s) => (
+                    <tr key={s.id} className="border-b border-border last:border-0">
+                      <td className="px-5 py-3 font-medium">{s.name}</td>
+                      <td className="px-5 py-3 text-muted-foreground">{s.admission}</td>
+                      <td className="px-5 py-3 text-muted-foreground">{s.className}</td>
+                      <td className="px-5 py-3 text-right text-rose-600 font-semibold">
+                        {KES(s.balance)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-center justify-between p-5 border-b border-border">
+            <div>
+              <div className="font-display font-bold">Students cleared</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Fully paid for current invoices
+              </div>
+            </div>
+            <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-semibold">
+              {stats.clearedList?.length || 0}
+            </span>
+          </div>
+          <div className="overflow-x-auto max-h-96">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-card">
+                <tr className="text-xs uppercase text-muted-foreground border-b border-border">
+                  <th className="text-left font-medium px-5 py-3">Student</th>
+                  <th className="text-left font-medium px-5 py-3">Adm. No</th>
+                  <th className="text-left font-medium px-5 py-3">Class</th>
+                  <th className="text-right font-medium px-5 py-3">Paid</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(stats.clearedList || []).length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-5 py-6 text-center text-muted-foreground">
+                      No cleared students yet
+                    </td>
+                  </tr>
+                ) : (
+                  stats.clearedList!.map((s) => (
+                    <tr key={s.id} className="border-b border-border last:border-0">
+                      <td className="px-5 py-3 font-medium">{s.name}</td>
+                      <td className="px-5 py-3 text-muted-foreground">{s.admission}</td>
+                      <td className="px-5 py-3 text-muted-foreground">{s.className}</td>
+                      <td className="px-5 py-3 text-right text-emerald-600 font-semibold">
+                        {KES(s.total)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
     </>
   );
 }
