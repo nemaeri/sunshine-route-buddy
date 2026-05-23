@@ -262,11 +262,13 @@ type StaffForm = {
   national_id: string;
   support_job: string;
   support_job_other: string;
+  extra_roles: string[];
 };
 
 const emptyForm: StaffForm = {
   first_name: "", last_name: "", role: "Teacher", phone: "", email: "",
   subjects: [], assigned_classes: [], national_id: "", support_job: "Cleaner", support_job_other: "",
+  extra_roles: [],
 };
 
 function StaffFormFields({ form, setForm, classes }: {
