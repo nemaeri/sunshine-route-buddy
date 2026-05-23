@@ -45,7 +45,7 @@ function ClassesPage() {
       <PageHeader
         title="Classes"
         description="CBC grades, streams & class teachers"
-        action={isAdmin ? <AddClassDialog onCreated={() => qc.invalidateQueries({ queryKey: ["classes-with-count"] })} /> : null}
+        actions={isAdmin ? <AddClassDialog onCreated={() => qc.invalidateQueries({ queryKey: ["classes-with-count"] })} /> : null}
       />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {q.isLoading && <Card className="p-6 text-sm text-muted-foreground">Loading…</Card>}

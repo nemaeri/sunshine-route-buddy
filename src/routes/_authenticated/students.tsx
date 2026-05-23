@@ -68,7 +68,7 @@ function StudentsPage() {
       <PageHeader
         title="Student Directory"
         description="Active learners across all CBC grades"
-        action={
+        actions={
           isAdmin ? (
             <AddStudentDialog
               classes={classesQ.data ?? []}

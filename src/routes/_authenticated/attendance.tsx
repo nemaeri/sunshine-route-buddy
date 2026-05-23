@@ -102,7 +102,7 @@ function AttendancePage() {
       <PageHeader
         title="Daily Attendance"
         description="One-tap roll for class teachers"
-        action={canMark ? (
+        actions={canMark ? (
           <Button onClick={() => save.mutate()} disabled={!classId || save.isPending}>
             {save.isPending ? "Saving…" : "Save roll"}
           </Button>
