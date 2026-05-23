@@ -13,9 +13,11 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
+import { Route as AuthenticatedMyChildrenRouteImport } from './routes/_authenticated/my-children'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedClassesRouteImport } from './routes/_authenticated/classes'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
+import { Route as AuthenticatedAnnouncementsRouteImport } from './routes/_authenticated/announcements'
 import { Route as AuthenticatedPageRouteImport } from './routes/_authenticated/$page'
 
 const AuthRoute = AuthRouteImport.update({
@@ -37,6 +39,11 @@ const AuthenticatedStudentsRoute = AuthenticatedStudentsRouteImport.update({
   path: '/students',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMyChildrenRoute = AuthenticatedMyChildrenRouteImport.update({
+  id: '/my-children',
+  path: '/my-children',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -52,6 +59,12 @@ const AuthenticatedAttendanceRoute = AuthenticatedAttendanceRouteImport.update({
   path: '/attendance',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAnnouncementsRoute =
+  AuthenticatedAnnouncementsRouteImport.update({
+    id: '/announcements',
+    path: '/announcements',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPageRoute = AuthenticatedPageRouteImport.update({
   id: '/$page',
   path: '/$page',
@@ -62,18 +75,22 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/$page': typeof AuthenticatedPageRoute
+  '/announcements': typeof AuthenticatedAnnouncementsRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/classes': typeof AuthenticatedClassesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/my-children': typeof AuthenticatedMyChildrenRoute
   '/students': typeof AuthenticatedStudentsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/$page': typeof AuthenticatedPageRoute
+  '/announcements': typeof AuthenticatedAnnouncementsRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/classes': typeof AuthenticatedClassesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/my-children': typeof AuthenticatedMyChildrenRoute
   '/students': typeof AuthenticatedStudentsRoute
 }
 export interface FileRoutesById {
@@ -82,9 +99,11 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/$page': typeof AuthenticatedPageRoute
+  '/_authenticated/announcements': typeof AuthenticatedAnnouncementsRoute
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
   '/_authenticated/classes': typeof AuthenticatedClassesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/my-children': typeof AuthenticatedMyChildrenRoute
   '/_authenticated/students': typeof AuthenticatedStudentsRoute
 }
 export interface FileRouteTypes {
@@ -93,18 +112,22 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/$page'
+    | '/announcements'
     | '/attendance'
     | '/classes'
     | '/dashboard'
+    | '/my-children'
     | '/students'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/$page'
+    | '/announcements'
     | '/attendance'
     | '/classes'
     | '/dashboard'
+    | '/my-children'
     | '/students'
   id:
     | '__root__'
@@ -112,9 +135,11 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/$page'
+    | '/_authenticated/announcements'
     | '/_authenticated/attendance'
     | '/_authenticated/classes'
     | '/_authenticated/dashboard'
+    | '/_authenticated/my-children'
     | '/_authenticated/students'
   fileRoutesById: FileRoutesById
 }
@@ -154,6 +179,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudentsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/my-children': {
+      id: '/_authenticated/my-children'
+      path: '/my-children'
+      fullPath: '/my-children'
+      preLoaderRoute: typeof AuthenticatedMyChildrenRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -175,6 +207,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAttendanceRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/announcements': {
+      id: '/_authenticated/announcements'
+      path: '/announcements'
+      fullPath: '/announcements'
+      preLoaderRoute: typeof AuthenticatedAnnouncementsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/$page': {
       id: '/_authenticated/$page'
       path: '/$page'
@@ -187,17 +226,21 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedPageRoute: typeof AuthenticatedPageRoute
+  AuthenticatedAnnouncementsRoute: typeof AuthenticatedAnnouncementsRoute
   AuthenticatedAttendanceRoute: typeof AuthenticatedAttendanceRoute
   AuthenticatedClassesRoute: typeof AuthenticatedClassesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedMyChildrenRoute: typeof AuthenticatedMyChildrenRoute
   AuthenticatedStudentsRoute: typeof AuthenticatedStudentsRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPageRoute: AuthenticatedPageRoute,
+  AuthenticatedAnnouncementsRoute: AuthenticatedAnnouncementsRoute,
   AuthenticatedAttendanceRoute: AuthenticatedAttendanceRoute,
   AuthenticatedClassesRoute: AuthenticatedClassesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedMyChildrenRoute: AuthenticatedMyChildrenRoute,
   AuthenticatedStudentsRoute: AuthenticatedStudentsRoute,
 }
 
