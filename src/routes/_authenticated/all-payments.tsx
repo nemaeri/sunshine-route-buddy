@@ -85,11 +85,20 @@ function AllPaymentsPage() {
 
   const all = paymentsQ.data ?? [];
 
+  const feeCategoriesQ = useQuery({
+    queryKey: ["fee-categories"],
+    queryFn: async () => {
+      const r = await supabase.from("fee_items").select("name").order("name");
+      if (r.error) throw r.error;
+      return Array.from(new Set((r.data ?? []).map((x: any) => x.name as string))).sort();
+    },
+  });
+
   const categories = useMemo(() => {
-    const s = new Set<string>();
+    const s = new Set<string>(feeCategoriesQ.data ?? []);
     all.forEach((p: any) => { if (p.category && p.category !== "—") s.add(p.category); });
     return Array.from(s).sort();
-  }, [all]);
+  }, [all, feeCategoriesQ.data]);
 
   // Cards — always over ALL payments (not filtered)
   const cards = useMemo(() => {
