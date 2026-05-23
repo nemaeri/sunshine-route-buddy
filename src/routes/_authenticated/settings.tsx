@@ -183,7 +183,8 @@ function LeavePoliciesTab({ canEdit }: { canEdit: boolean }) {
 
   const policiesQ = useQuery({
     queryKey: ["leave-policies"],
-    queryFn: async () => (await supabase.from("leave_policies").select("*").order("leave_type")).data ?? [],
+    queryFn: async () =>
+      (await supabase.from("leave_policies").select("*").order("staff_category").order("leave_type")).data ?? [],
   });
 
   const save = useMutation({
@@ -198,35 +199,63 @@ function LeavePoliciesTab({ canEdit }: { canEdit: boolean }) {
     onError: (e: any) => toast.error(e.message ?? "Failed"),
   });
 
+  const grouped = useMemo(() => {
+    const map: Record<string, any[]> = { teaching: [], non_teaching: [], support: [] };
+    (policiesQ.data ?? []).forEach((p: any) => {
+      if (map[p.staff_category]) map[p.staff_category].push(p);
+    });
+    return map;
+  }, [policiesQ.data]);
+
   return (
     <Card className="p-6">
-      <h3 className="font-display font-bold mb-1">Leave entitlements (default per staff per year)</h3>
+      <h3 className="font-display font-bold mb-1">Leave entitlements by staff category</h3>
       <p className="text-sm text-muted-foreground mb-5">
-        These defaults seed each staff member's balance. Leave unused days carry over at the percentage set below.
-        Leave the days field blank for unlimited (e.g. unpaid leave).
+        Defaults per staff per year. Entitlements differ across Teaching, Non-teaching and Support staff.
+        Unused days carry over at the percentage set. Leave the days field blank for unlimited (e.g. unpaid leave).
       </p>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
-            <tr>
-              <th className="text-left p-3 font-semibold">Leave type</th>
-              <th className="text-left p-3 font-semibold">Default days / year</th>
-              <th className="text-left p-3 font-semibold">Carryover %</th>
-              <th className="text-left p-3 font-semibold">Max carryover days</th>
-              <th className="text-right p-3 font-semibold">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {policiesQ.data?.map((p: any) => (
-              <PolicyRow key={p.id} row={p} canEdit={canEdit} onSave={(r) => save.mutate(r)} />
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Tabs defaultValue="teaching">
+        <TabsList className="mb-4">
+          {STAFF_CATEGORIES.map((c) => (
+            <TabsTrigger key={c.key} value={c.key}>{c.label}</TabsTrigger>
+          ))}
+        </TabsList>
+        {STAFF_CATEGORIES.map((c) => (
+          <TabsContent key={c.key} value={c.key}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
+                  <tr>
+                    <th className="text-left p-3 font-semibold">Leave type</th>
+                    <th className="text-left p-3 font-semibold">Default days / year</th>
+                    <th className="text-left p-3 font-semibold">Carryover %</th>
+                    <th className="text-left p-3 font-semibold">Max carryover days</th>
+                    <th className="text-right p-3 font-semibold">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {grouped[c.key].map((p: any) => (
+                    <PolicyRow key={p.id} row={p} canEdit={canEdit} onSave={(r) => save.mutate(r)} />
+                  ))}
+                  {grouped[c.key].length === 0 && (
+                    <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No policies yet for this category</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </TabsContent>
+        ))}
+      </Tabs>
     </Card>
   );
 }
+
+const STAFF_CATEGORIES = [
+  { key: "teaching", label: "Teaching staff" },
+  { key: "non_teaching", label: "Non-teaching staff" },
+  { key: "support", label: "Support staff" },
+] as const;
 
 function PolicyRow({ row, canEdit, onSave }: { row: any; canEdit: boolean; onSave: (r: any) => void }) {
   const [local, setLocal] = useState(row);
