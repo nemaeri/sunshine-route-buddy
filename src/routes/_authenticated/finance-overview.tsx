@@ -117,27 +117,51 @@ function FinanceOverviewPage() {
   });
 
   const stats = useMemo(() => {
-    const invs = invoicesQ.data || [];
+    const invs = (invoicesQ.data || []) as any[];
     let collected = 0;
     let outstanding = 0;
-    const studentTotal = new Map<string, number>();
-    const studentBal = new Map<string, number>();
+    type SAgg = {
+      id: string;
+      name: string;
+      admission: string;
+      className: string;
+      total: number;
+      balance: number;
+    };
+    const byStudent = new Map<string, SAgg>();
     for (const i of invs) {
       const total = Number(i.total_amount || 0);
       const bal = Number(i.balance || 0);
       collected += Math.max(0, total - bal);
       outstanding += bal;
-      studentTotal.set(i.student_id, (studentTotal.get(i.student_id) || 0) + total);
-      studentBal.set(i.student_id, (studentBal.get(i.student_id) || 0) + bal);
+      const s = i.student;
+      const agg = byStudent.get(i.student_id) || {
+        id: i.student_id,
+        name: s ? `${s.first_name} ${s.last_name}` : "Unknown",
+        admission: s?.admission_no || "—",
+        className: s?.class?.name || "—",
+        total: 0,
+        balance: 0,
+      };
+      agg.total += total;
+      agg.balance += bal;
+      byStudent.set(i.student_id, agg);
     }
-    let cleared = 0;
-    let defaulters = 0;
-    for (const [sid, total] of studentTotal) {
-      const bal = studentBal.get(sid) || 0;
-      if (total > 0 && bal <= 0) cleared += 1;
-      if (bal > 0) defaulters += 1;
-    }
-    return { collected, outstanding, cleared, defaulters };
+    const all = Array.from(byStudent.values());
+    const clearedList = all
+      .filter((s) => s.total > 0 && s.balance <= 0)
+      .sort((a, b) => b.total - a.total);
+    const defaultersList = all
+      .filter((s) => s.balance > 0)
+      .sort((a, b) => b.balance - a.balance);
+    return {
+      collected,
+      outstanding,
+      cleared: clearedList.length,
+      defaulters: defaultersList.length,
+      clearedList,
+      defaultersList,
+    };
   }, [invoicesQ.data]);
 
   const maxGrade = Math.max(1, ...(gradeCollectionQ.data || []).map((g) => g.total));
