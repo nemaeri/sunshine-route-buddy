@@ -109,11 +109,24 @@ function MyLeavePage() {
       toast.success("Leave request submitted");
       qc.invalidateQueries({ queryKey: ["my-leave"] });
       qc.invalidateQueries({ queryKey: ["leave-requests"] });
+      qc.invalidateQueries({ queryKey: ["leave-balances"] });
       setOpen(false);
       setStartDate(""); setEndDate(""); setReason(""); setLeaveType("annual");
     },
     onError: (e: any) => toast.error(e.message ?? "Failed to submit"),
   });
+
+  const cancelM = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("leave_requests").update({ status: "cancelled" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Request cancelled");
+      qc.invalidateQueries({ queryKey: ["my-leave"] });
+      qc.invalidateQueries({ queryKey: ["leave-requests"] });
+      qc.invalidateQueries({ queryKey: ["leave-balances"] });
+    },
 
   const cancelM = useMutation({
     mutationFn: async (id: string) => {
