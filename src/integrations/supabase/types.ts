@@ -749,43 +749,64 @@ export type Database = {
         Row: {
           active: boolean
           admission_no: string
+          boarding: boolean
           class_id: string | null
           created_at: string
           date_of_birth: string | null
           enrolled_on: string
           first_name: string
           gender: Database["public"]["Enums"]["gender"] | null
+          home_address: string | null
           id: string
           last_name: string
+          lunch: boolean
+          parent_email: string | null
+          parent_name: string | null
+          parent_phone: string | null
           photo_url: string | null
+          status: string
           updated_at: string
         }
         Insert: {
           active?: boolean
           admission_no: string
+          boarding?: boolean
           class_id?: string | null
           created_at?: string
           date_of_birth?: string | null
           enrolled_on?: string
           first_name: string
           gender?: Database["public"]["Enums"]["gender"] | null
+          home_address?: string | null
           id?: string
           last_name: string
+          lunch?: boolean
+          parent_email?: string | null
+          parent_name?: string | null
+          parent_phone?: string | null
           photo_url?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
           active?: boolean
           admission_no?: string
+          boarding?: boolean
           class_id?: string | null
           created_at?: string
           date_of_birth?: string | null
           enrolled_on?: string
           first_name?: string
           gender?: Database["public"]["Enums"]["gender"] | null
+          home_address?: string | null
           id?: string
           last_name?: string
+          lunch?: boolean
+          parent_email?: string | null
+          parent_name?: string | null
+          parent_phone?: string | null
           photo_url?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: [
