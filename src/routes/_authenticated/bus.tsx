@@ -195,30 +195,9 @@ function RouteDetail({ routeId, isAdmin, isDriver, userId }: { routeId: string; 
           {isAdmin && <NewStopDialog routeId={routeId} nextSeq={(stopsQ.data?.length ?? 0) + 1} onDone={() => qc.invalidateQueries({ queryKey: ["stops", routeId] })} />}
         </div>
         {stopsQ.data?.length === 0 && <p className="p-6 text-sm text-muted-foreground">No stops on this route yet.</p>}
-        <ol className="divide-y divide-border">
-          {stopsQ.data?.map((s: any, i: number) => (
-            <li key={s.id} className="px-5 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="size-7 rounded-full bg-brand-navy text-white text-xs font-bold flex items-center justify-center">{i + 1}</span>
-                <div>
-                  <p className="text-sm font-medium">{s.name}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Pickup {s.scheduled_pickup ?? "—"} · Dropoff {s.scheduled_dropoff ?? "—"}
-                  </p>
-                </div>
-              </div>
-              {s.lat && s.lng && (
-                <a
-                  href={`https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lng}#map=17/${s.lat}/${s.lng}`}
-                  target="_blank" rel="noreferrer"
-                  className="text-[11px] text-brand-navy underline"
-                >
-                  Open in map
-                </a>
-              )}
-            </li>
-          ))}
-        </ol>
+        {stopsQ.data && stopsQ.data.length > 0 && (
+          <SortableStops stops={stopsQ.data} routeId={routeId} isAdmin={isAdmin} />
+        )}
       </Card>
     </>
   );
