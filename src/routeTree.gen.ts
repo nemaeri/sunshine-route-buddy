@@ -35,6 +35,7 @@ import { Route as AuthenticatedMyPerformanceRouteImport } from './routes/_authen
 import { Route as AuthenticatedMyLeaveRouteImport } from './routes/_authenticated/my-leave'
 import { Route as AuthenticatedMyFeesRouteImport } from './routes/_authenticated/my-fees'
 import { Route as AuthenticatedMyChildrenRouteImport } from './routes/_authenticated/my-children'
+import { Route as AuthenticatedMyAttendanceRouteImport } from './routes/_authenticated/my-attendance'
 import { Route as AuthenticatedLeaveRequestsRouteImport } from './routes/_authenticated/leave-requests'
 import { Route as AuthenticatedFinancialStatementRouteImport } from './routes/_authenticated/financial-statement'
 import { Route as AuthenticatedFinanceOverviewRouteImport } from './routes/_authenticated/finance-overview'
@@ -182,6 +183,12 @@ const AuthenticatedMyChildrenRoute = AuthenticatedMyChildrenRouteImport.update({
   path: '/my-children',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMyAttendanceRoute =
+  AuthenticatedMyAttendanceRouteImport.update({
+    id: '/my-attendance',
+    path: '/my-attendance',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedLeaveRequestsRoute =
   AuthenticatedLeaveRequestsRouteImport.update({
     id: '/leave-requests',
@@ -276,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/finance-overview': typeof AuthenticatedFinanceOverviewRoute
   '/financial-statement': typeof AuthenticatedFinancialStatementRoute
   '/leave-requests': typeof AuthenticatedLeaveRequestsRoute
+  '/my-attendance': typeof AuthenticatedMyAttendanceRoute
   '/my-children': typeof AuthenticatedMyChildrenRoute
   '/my-fees': typeof AuthenticatedMyFeesRoute
   '/my-leave': typeof AuthenticatedMyLeaveRoute
@@ -316,6 +324,7 @@ export interface FileRoutesByTo {
   '/finance-overview': typeof AuthenticatedFinanceOverviewRoute
   '/financial-statement': typeof AuthenticatedFinancialStatementRoute
   '/leave-requests': typeof AuthenticatedLeaveRequestsRoute
+  '/my-attendance': typeof AuthenticatedMyAttendanceRoute
   '/my-children': typeof AuthenticatedMyChildrenRoute
   '/my-fees': typeof AuthenticatedMyFeesRoute
   '/my-leave': typeof AuthenticatedMyLeaveRoute
@@ -359,6 +368,7 @@ export interface FileRoutesById {
   '/_authenticated/finance-overview': typeof AuthenticatedFinanceOverviewRoute
   '/_authenticated/financial-statement': typeof AuthenticatedFinancialStatementRoute
   '/_authenticated/leave-requests': typeof AuthenticatedLeaveRequestsRoute
+  '/_authenticated/my-attendance': typeof AuthenticatedMyAttendanceRoute
   '/_authenticated/my-children': typeof AuthenticatedMyChildrenRoute
   '/_authenticated/my-fees': typeof AuthenticatedMyFeesRoute
   '/_authenticated/my-leave': typeof AuthenticatedMyLeaveRoute
@@ -402,6 +412,7 @@ export interface FileRouteTypes {
     | '/finance-overview'
     | '/financial-statement'
     | '/leave-requests'
+    | '/my-attendance'
     | '/my-children'
     | '/my-fees'
     | '/my-leave'
@@ -442,6 +453,7 @@ export interface FileRouteTypes {
     | '/finance-overview'
     | '/financial-statement'
     | '/leave-requests'
+    | '/my-attendance'
     | '/my-children'
     | '/my-fees'
     | '/my-leave'
@@ -484,6 +496,7 @@ export interface FileRouteTypes {
     | '/_authenticated/finance-overview'
     | '/_authenticated/financial-statement'
     | '/_authenticated/leave-requests'
+    | '/_authenticated/my-attendance'
     | '/_authenticated/my-children'
     | '/_authenticated/my-fees'
     | '/_authenticated/my-leave'
@@ -700,6 +713,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyChildrenRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/my-attendance': {
+      id: '/_authenticated/my-attendance'
+      path: '/my-attendance'
+      fullPath: '/my-attendance'
+      preLoaderRoute: typeof AuthenticatedMyAttendanceRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/leave-requests': {
       id: '/_authenticated/leave-requests'
       path: '/leave-requests'
@@ -815,6 +835,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedFinanceOverviewRoute: typeof AuthenticatedFinanceOverviewRoute
   AuthenticatedFinancialStatementRoute: typeof AuthenticatedFinancialStatementRoute
   AuthenticatedLeaveRequestsRoute: typeof AuthenticatedLeaveRequestsRoute
+  AuthenticatedMyAttendanceRoute: typeof AuthenticatedMyAttendanceRoute
   AuthenticatedMyChildrenRoute: typeof AuthenticatedMyChildrenRoute
   AuthenticatedMyFeesRoute: typeof AuthenticatedMyFeesRoute
   AuthenticatedMyLeaveRoute: typeof AuthenticatedMyLeaveRoute
@@ -844,6 +865,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedFinanceOverviewRoute: AuthenticatedFinanceOverviewRoute,
   AuthenticatedFinancialStatementRoute: AuthenticatedFinancialStatementRoute,
   AuthenticatedLeaveRequestsRoute: AuthenticatedLeaveRequestsRoute,
+  AuthenticatedMyAttendanceRoute: AuthenticatedMyAttendanceRoute,
   AuthenticatedMyChildrenRoute: AuthenticatedMyChildrenRoute,
   AuthenticatedMyFeesRoute: AuthenticatedMyFeesRoute,
   AuthenticatedMyLeaveRoute: AuthenticatedMyLeaveRoute,
