@@ -19,7 +19,7 @@ import {
   Banknote,
   BookUser,
   BarChart3,
-  Megaphone,
+  
   Baby,
   Wallet,
   LineChart,
