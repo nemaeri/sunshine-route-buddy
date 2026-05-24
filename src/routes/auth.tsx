@@ -9,6 +9,14 @@ export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Sign in — JEC" }] }),
 });
 
+async function landingPathForUser(userId: string): Promise<string> {
+  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+  const roles = (data ?? []).map((r: any) => r.role as string);
+  if (roles.includes("admin") || roles.includes("head_teacher")) return "/dashboard";
+  if (roles.includes("teacher")) return "/teacher/dashboard";
+  return "/dashboard";
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
@@ -19,7 +27,9 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/dashboard" });
+    if (!loading && user) {
+      landingPathForUser(user.id).then((to) => navigate({ to: to as any }));
+    }
   }, [user, loading, navigate]);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -27,7 +37,7 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { error, data } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -37,12 +47,15 @@ function AuthPage() {
         });
         if (error) throw error;
         toast.success("Account created. You're signed in.");
+        const to = data.user ? await landingPathForUser(data.user.id) : "/dashboard";
+        navigate({ to: to as any });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error, data } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back.");
+        const to = data.user ? await landingPathForUser(data.user.id) : "/dashboard";
+        navigate({ to: to as any });
       }
-      navigate({ to: "/dashboard" });
     } catch (err: any) {
       toast.error(err?.message ?? "Authentication failed");
     } finally {
