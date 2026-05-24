@@ -47,6 +47,8 @@ function StatCard({
 }
 
 function FinanceOverviewPage() {
+  const qc = useQueryClient();
+  const [payFor, setPayFor] = useState<null | { id: string; name: string; balance: number }>(null);
   const now = new Date();
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
