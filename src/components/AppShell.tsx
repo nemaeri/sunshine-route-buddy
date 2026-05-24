@@ -19,6 +19,8 @@ import {
   Banknote,
   BookUser,
   BarChart3,
+  Megaphone,
+  Baby,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 
@@ -29,49 +31,61 @@ type NavItem = {
   roles?: AppRole[];
 };
 
-type NavSection = { title: string; items: NavItem[] };
+type NavSection = { title: string; items: NavItem[]; roles?: AppRole[] };
+
+const ADMINISH: AppRole[] = ["admin", "head_teacher", "finance"];
 
 const SECTIONS: NavSection[] = [
+  // Parent portal — only parents see this
+  {
+    title: "Family",
+    roles: ["parent"],
+    items: [
+      { to: "/my-children", label: "My Children", icon: Baby, roles: ["parent"] },
+      { to: "/announcements", label: "Announcements", icon: Megaphone, roles: ["parent"] },
+      { to: "/bus", label: "Transport", icon: Bus, roles: ["parent"] },
+    ],
+  },
   {
     title: "Main",
     items: [
-      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/students", label: "Students", icon: GraduationCap },
-      { to: "/classes", label: "Classes & Streams", icon: Users },
-      { to: "/staff-dashboard", label: "Staff dashboard", icon: LayoutGrid },
-      { to: "/leave-requests", label: "Leave requests", icon: CalendarDays },
-      { to: "/my-leave", label: "My leave", icon: PlaneTakeoff },
+      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ADMINISH },
+      { to: "/students", label: "Students", icon: GraduationCap, roles: ADMINISH },
+      { to: "/classes", label: "Classes & Streams", icon: Users, roles: ADMINISH },
+      { to: "/staff-dashboard", label: "Staff dashboard", icon: LayoutGrid, roles: ADMINISH },
+      { to: "/leave-requests", label: "Leave requests", icon: CalendarDays, roles: ADMINISH },
+      { to: "/my-leave", label: "My leave", icon: PlaneTakeoff, roles: ADMINISH },
     ],
   },
   {
     title: "School",
     items: [
-      { to: "/settings", label: "Settings", icon: Settings },
-      { to: "/bus", label: "Transport", icon: Bus },
+      { to: "/settings", label: "Settings", icon: Settings, roles: ADMINISH },
+      { to: "/bus", label: "Transport", icon: Bus, roles: ADMINISH },
     ],
   },
   {
     title: "Academic",
     items: [
-      { to: "/subjects", label: "Subjects", icon: BookOpen },
-      { to: "/timetable", label: "Timetable", icon: CalendarRange },
-      { to: "/fee-structure", label: "Fee Structure", icon: Receipt },
+      { to: "/subjects", label: "Subjects", icon: BookOpen, roles: ADMINISH },
+      { to: "/timetable", label: "Timetable", icon: CalendarRange, roles: ADMINISH },
+      { to: "/fee-structure", label: "Fee Structure", icon: Receipt, roles: ADMINISH },
     ],
   },
   {
     title: "Finance",
     items: [
-      { to: "/all-payments", label: "All payments", icon: CreditCard },
-      { to: "/financial-statement", label: "Financial statement", icon: FileSpreadsheet },
-      { to: "/finance-overview", label: "Finance Overview", icon: PieChart },
-      { to: "/payroll", label: "Payroll", icon: Banknote },
-      { to: "/student-ledger", label: "Student Ledger", icon: BookUser },
+      { to: "/all-payments", label: "All payments", icon: CreditCard, roles: ADMINISH },
+      { to: "/financial-statement", label: "Financial statement", icon: FileSpreadsheet, roles: ADMINISH },
+      { to: "/finance-overview", label: "Finance Overview", icon: PieChart, roles: ADMINISH },
+      { to: "/payroll", label: "Payroll", icon: Banknote, roles: ADMINISH },
+      { to: "/student-ledger", label: "Student Ledger", icon: BookUser, roles: ADMINISH },
     ],
   },
   {
     title: "Insights",
     items: [
-      { to: "/reports", label: "Reports", icon: BarChart3 },
+      { to: "/reports", label: "Reports", icon: BarChart3, roles: ADMINISH },
     ],
   },
 ];
