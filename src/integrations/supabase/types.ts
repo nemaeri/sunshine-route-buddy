@@ -213,6 +213,42 @@ export type Database = {
           },
         ]
       }
+      chart_of_accounts: {
+        Row: {
+          account_type: Database["public"]["Enums"]["account_type"]
+          active: boolean
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          normal_side: Database["public"]["Enums"]["normal_side"]
+          updated_at: string
+        }
+        Insert: {
+          account_type: Database["public"]["Enums"]["account_type"]
+          active?: boolean
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          normal_side: Database["public"]["Enums"]["normal_side"]
+          updated_at?: string
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["account_type"]
+          active?: boolean
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          normal_side?: Database["public"]["Enums"]["normal_side"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       classes: {
         Row: {
           academic_year: number
@@ -323,6 +359,87 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      journal_entries: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          entry_date: string
+          entry_no: string
+          id: string
+          memo: string | null
+          posted: boolean
+          reference: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          entry_no: string
+          id?: string
+          memo?: string | null
+          posted?: boolean
+          reference?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          entry_no?: string
+          id?: string
+          memo?: string | null
+          posted?: boolean
+          reference?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      journal_lines: {
+        Row: {
+          account_id: string
+          credit: number
+          debit: number
+          entry_id: string
+          id: string
+          line_memo: string | null
+          position: number
+        }
+        Insert: {
+          account_id: string
+          credit?: number
+          debit?: number
+          entry_id: string
+          id?: string
+          line_memo?: string | null
+          position?: number
+        }
+        Update: {
+          account_id?: string
+          credit?: number
+          debit?: number
+          entry_id?: string
+          id?: string
+          line_memo?: string | null
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_lines_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leave_entitlements: {
         Row: {
@@ -1260,6 +1377,7 @@ export type Database = {
       }
     }
     Enums: {
+      account_type: "asset" | "liability" | "equity" | "income" | "expense"
       app_role:
         | "admin"
         | "teacher"
@@ -1270,6 +1388,7 @@ export type Database = {
       attendance_status: "present" | "absent" | "late" | "excused"
       employment_type: "permanent" | "contract"
       gender: "male" | "female"
+      normal_side: "debit" | "credit"
       staff_category: "teaching" | "non_teaching" | "support"
     }
     CompositeTypes: {
@@ -1398,6 +1517,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_type: ["asset", "liability", "equity", "income", "expense"],
       app_role: [
         "admin",
         "teacher",
@@ -1409,6 +1529,7 @@ export const Constants = {
       attendance_status: ["present", "absent", "late", "excused"],
       employment_type: ["permanent", "contract"],
       gender: ["male", "female"],
+      normal_side: ["debit", "credit"],
       staff_category: ["teaching", "non_teaching", "support"],
     },
   },
