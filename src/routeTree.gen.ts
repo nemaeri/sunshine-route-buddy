@@ -31,7 +31,9 @@ import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedPayrollRouteImport } from './routes/_authenticated/payroll'
+import { Route as AuthenticatedMyPerformanceRouteImport } from './routes/_authenticated/my-performance'
 import { Route as AuthenticatedMyLeaveRouteImport } from './routes/_authenticated/my-leave'
+import { Route as AuthenticatedMyFeesRouteImport } from './routes/_authenticated/my-fees'
 import { Route as AuthenticatedMyChildrenRouteImport } from './routes/_authenticated/my-children'
 import { Route as AuthenticatedLeaveRequestsRouteImport } from './routes/_authenticated/leave-requests'
 import { Route as AuthenticatedFinancialStatementRouteImport } from './routes/_authenticated/financial-statement'
@@ -159,9 +161,20 @@ const AuthenticatedPayrollRoute = AuthenticatedPayrollRouteImport.update({
   path: '/payroll',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMyPerformanceRoute =
+  AuthenticatedMyPerformanceRouteImport.update({
+    id: '/my-performance',
+    path: '/my-performance',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedMyLeaveRoute = AuthenticatedMyLeaveRouteImport.update({
   id: '/my-leave',
   path: '/my-leave',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedMyFeesRoute = AuthenticatedMyFeesRouteImport.update({
+  id: '/my-fees',
+  path: '/my-fees',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedMyChildrenRoute = AuthenticatedMyChildrenRouteImport.update({
@@ -264,7 +277,9 @@ export interface FileRoutesByFullPath {
   '/financial-statement': typeof AuthenticatedFinancialStatementRoute
   '/leave-requests': typeof AuthenticatedLeaveRequestsRoute
   '/my-children': typeof AuthenticatedMyChildrenRoute
+  '/my-fees': typeof AuthenticatedMyFeesRoute
   '/my-leave': typeof AuthenticatedMyLeaveRoute
+  '/my-performance': typeof AuthenticatedMyPerformanceRoute
   '/payroll': typeof AuthenticatedPayrollRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -302,7 +317,9 @@ export interface FileRoutesByTo {
   '/financial-statement': typeof AuthenticatedFinancialStatementRoute
   '/leave-requests': typeof AuthenticatedLeaveRequestsRoute
   '/my-children': typeof AuthenticatedMyChildrenRoute
+  '/my-fees': typeof AuthenticatedMyFeesRoute
   '/my-leave': typeof AuthenticatedMyLeaveRoute
+  '/my-performance': typeof AuthenticatedMyPerformanceRoute
   '/payroll': typeof AuthenticatedPayrollRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -343,7 +360,9 @@ export interface FileRoutesById {
   '/_authenticated/financial-statement': typeof AuthenticatedFinancialStatementRoute
   '/_authenticated/leave-requests': typeof AuthenticatedLeaveRequestsRoute
   '/_authenticated/my-children': typeof AuthenticatedMyChildrenRoute
+  '/_authenticated/my-fees': typeof AuthenticatedMyFeesRoute
   '/_authenticated/my-leave': typeof AuthenticatedMyLeaveRoute
+  '/_authenticated/my-performance': typeof AuthenticatedMyPerformanceRoute
   '/_authenticated/payroll': typeof AuthenticatedPayrollRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -384,7 +403,9 @@ export interface FileRouteTypes {
     | '/financial-statement'
     | '/leave-requests'
     | '/my-children'
+    | '/my-fees'
     | '/my-leave'
+    | '/my-performance'
     | '/payroll'
     | '/reports'
     | '/settings'
@@ -422,7 +443,9 @@ export interface FileRouteTypes {
     | '/financial-statement'
     | '/leave-requests'
     | '/my-children'
+    | '/my-fees'
     | '/my-leave'
+    | '/my-performance'
     | '/payroll'
     | '/reports'
     | '/settings'
@@ -462,7 +485,9 @@ export interface FileRouteTypes {
     | '/_authenticated/financial-statement'
     | '/_authenticated/leave-requests'
     | '/_authenticated/my-children'
+    | '/_authenticated/my-fees'
     | '/_authenticated/my-leave'
+    | '/_authenticated/my-performance'
     | '/_authenticated/payroll'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
@@ -647,11 +672,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPayrollRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/my-performance': {
+      id: '/_authenticated/my-performance'
+      path: '/my-performance'
+      fullPath: '/my-performance'
+      preLoaderRoute: typeof AuthenticatedMyPerformanceRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/my-leave': {
       id: '/_authenticated/my-leave'
       path: '/my-leave'
       fullPath: '/my-leave'
       preLoaderRoute: typeof AuthenticatedMyLeaveRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/my-fees': {
+      id: '/_authenticated/my-fees'
+      path: '/my-fees'
+      fullPath: '/my-fees'
+      preLoaderRoute: typeof AuthenticatedMyFeesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/my-children': {
@@ -777,7 +816,9 @@ interface AuthenticatedRouteChildren {
   AuthenticatedFinancialStatementRoute: typeof AuthenticatedFinancialStatementRoute
   AuthenticatedLeaveRequestsRoute: typeof AuthenticatedLeaveRequestsRoute
   AuthenticatedMyChildrenRoute: typeof AuthenticatedMyChildrenRoute
+  AuthenticatedMyFeesRoute: typeof AuthenticatedMyFeesRoute
   AuthenticatedMyLeaveRoute: typeof AuthenticatedMyLeaveRoute
+  AuthenticatedMyPerformanceRoute: typeof AuthenticatedMyPerformanceRoute
   AuthenticatedPayrollRoute: typeof AuthenticatedPayrollRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -804,7 +845,9 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedFinancialStatementRoute: AuthenticatedFinancialStatementRoute,
   AuthenticatedLeaveRequestsRoute: AuthenticatedLeaveRequestsRoute,
   AuthenticatedMyChildrenRoute: AuthenticatedMyChildrenRoute,
+  AuthenticatedMyFeesRoute: AuthenticatedMyFeesRoute,
   AuthenticatedMyLeaveRoute: AuthenticatedMyLeaveRoute,
+  AuthenticatedMyPerformanceRoute: AuthenticatedMyPerformanceRoute,
   AuthenticatedPayrollRoute: AuthenticatedPayrollRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
@@ -868,3 +911,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
