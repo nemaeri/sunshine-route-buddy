@@ -19,8 +19,11 @@ import {
   Banknote,
   BookUser,
   BarChart3,
-  Megaphone,
+  
   Baby,
+  Wallet,
+  LineChart,
+  ClipboardCheck,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 
@@ -38,11 +41,13 @@ const ADMINISH: AppRole[] = ["admin", "head_teacher", "finance"];
 const SECTIONS: NavSection[] = [
   // Parent portal — only parents see this
   {
-    title: "Family",
+    title: "Menu",
     roles: ["parent"],
     items: [
       { to: "/my-children", label: "My Children", icon: Baby, roles: ["parent"] },
-      { to: "/announcements", label: "Announcements", icon: Megaphone, roles: ["parent"] },
+      { to: "/my-fees", label: "Fees & Payments", icon: Wallet, roles: ["parent"] },
+      { to: "/my-performance", label: "Performance", icon: LineChart, roles: ["parent"] },
+      { to: "/my-attendance", label: "Attendance", icon: ClipboardCheck, roles: ["parent"] },
       { to: "/bus", label: "Transport", icon: Bus, roles: ["parent"] },
     ],
   },
