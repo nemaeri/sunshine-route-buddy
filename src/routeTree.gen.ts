@@ -9,9 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TeacherRouteImport } from './routes/teacher'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TeacherIndexRouteImport } from './routes/teacher/index'
+import { Route as TeacherTransportRouteImport } from './routes/teacher/transport'
+import { Route as TeacherTimetableRouteImport } from './routes/teacher/timetable'
+import { Route as TeacherSubjectsRouteImport } from './routes/teacher/subjects'
+import { Route as TeacherMarksRouteImport } from './routes/teacher/marks'
+import { Route as TeacherLeaveRouteImport } from './routes/teacher/leave'
+import { Route as TeacherDashboardRouteImport } from './routes/teacher/dashboard'
+import { Route as TeacherClassesRouteImport } from './routes/teacher/classes'
+import { Route as TeacherAttendanceRouteImport } from './routes/teacher/attendance'
 import { Route as AuthenticatedTimetableRouteImport } from './routes/_authenticated/timetable'
 import { Route as AuthenticatedSubjectsRouteImport } from './routes/_authenticated/subjects'
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
@@ -36,7 +46,13 @@ import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAnnouncementsRouteImport } from './routes/_authenticated/announcements'
 import { Route as AuthenticatedAllPaymentsRouteImport } from './routes/_authenticated/all-payments'
 import { Route as AuthenticatedPageRouteImport } from './routes/_authenticated/$page'
+import { Route as TeacherClassesClassIdRouteImport } from './routes/teacher/classes.$classId'
 
+const TeacherRoute = TeacherRouteImport.update({
+  id: '/teacher',
+  path: '/teacher',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -50,6 +66,51 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherIndexRoute = TeacherIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherTransportRoute = TeacherTransportRouteImport.update({
+  id: '/transport',
+  path: '/transport',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherTimetableRoute = TeacherTimetableRouteImport.update({
+  id: '/timetable',
+  path: '/timetable',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherSubjectsRoute = TeacherSubjectsRouteImport.update({
+  id: '/subjects',
+  path: '/subjects',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherMarksRoute = TeacherMarksRouteImport.update({
+  id: '/marks',
+  path: '/marks',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherLeaveRoute = TeacherLeaveRouteImport.update({
+  id: '/leave',
+  path: '/leave',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherDashboardRoute = TeacherDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherClassesRoute = TeacherClassesRouteImport.update({
+  id: '/classes',
+  path: '/classes',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherAttendanceRoute = TeacherAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => TeacherRoute,
 } as any)
 const AuthenticatedTimetableRoute = AuthenticatedTimetableRouteImport.update({
   id: '/timetable',
@@ -179,10 +240,16 @@ const AuthenticatedPageRoute = AuthenticatedPageRouteImport.update({
   path: '/$page',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const TeacherClassesClassIdRoute = TeacherClassesClassIdRouteImport.update({
+  id: '/$classId',
+  path: '/$classId',
+  getParentRoute: () => TeacherClassesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/teacher': typeof TeacherRouteWithChildren
   '/$page': typeof AuthenticatedPageRoute
   '/all-payments': typeof AuthenticatedAllPaymentsRoute
   '/announcements': typeof AuthenticatedAnnouncementsRoute
@@ -207,6 +274,16 @@ export interface FileRoutesByFullPath {
   '/students': typeof AuthenticatedStudentsRoute
   '/subjects': typeof AuthenticatedSubjectsRoute
   '/timetable': typeof AuthenticatedTimetableRoute
+  '/teacher/attendance': typeof TeacherAttendanceRoute
+  '/teacher/classes': typeof TeacherClassesRouteWithChildren
+  '/teacher/dashboard': typeof TeacherDashboardRoute
+  '/teacher/leave': typeof TeacherLeaveRoute
+  '/teacher/marks': typeof TeacherMarksRoute
+  '/teacher/subjects': typeof TeacherSubjectsRoute
+  '/teacher/timetable': typeof TeacherTimetableRoute
+  '/teacher/transport': typeof TeacherTransportRoute
+  '/teacher/': typeof TeacherIndexRoute
+  '/teacher/classes/$classId': typeof TeacherClassesClassIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -235,12 +312,23 @@ export interface FileRoutesByTo {
   '/students': typeof AuthenticatedStudentsRoute
   '/subjects': typeof AuthenticatedSubjectsRoute
   '/timetable': typeof AuthenticatedTimetableRoute
+  '/teacher/attendance': typeof TeacherAttendanceRoute
+  '/teacher/classes': typeof TeacherClassesRouteWithChildren
+  '/teacher/dashboard': typeof TeacherDashboardRoute
+  '/teacher/leave': typeof TeacherLeaveRoute
+  '/teacher/marks': typeof TeacherMarksRoute
+  '/teacher/subjects': typeof TeacherSubjectsRoute
+  '/teacher/timetable': typeof TeacherTimetableRoute
+  '/teacher/transport': typeof TeacherTransportRoute
+  '/teacher': typeof TeacherIndexRoute
+  '/teacher/classes/$classId': typeof TeacherClassesClassIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/teacher': typeof TeacherRouteWithChildren
   '/_authenticated/$page': typeof AuthenticatedPageRoute
   '/_authenticated/all-payments': typeof AuthenticatedAllPaymentsRoute
   '/_authenticated/announcements': typeof AuthenticatedAnnouncementsRoute
@@ -265,12 +353,23 @@ export interface FileRoutesById {
   '/_authenticated/students': typeof AuthenticatedStudentsRoute
   '/_authenticated/subjects': typeof AuthenticatedSubjectsRoute
   '/_authenticated/timetable': typeof AuthenticatedTimetableRoute
+  '/teacher/attendance': typeof TeacherAttendanceRoute
+  '/teacher/classes': typeof TeacherClassesRouteWithChildren
+  '/teacher/dashboard': typeof TeacherDashboardRoute
+  '/teacher/leave': typeof TeacherLeaveRoute
+  '/teacher/marks': typeof TeacherMarksRoute
+  '/teacher/subjects': typeof TeacherSubjectsRoute
+  '/teacher/timetable': typeof TeacherTimetableRoute
+  '/teacher/transport': typeof TeacherTransportRoute
+  '/teacher/': typeof TeacherIndexRoute
+  '/teacher/classes/$classId': typeof TeacherClassesClassIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/teacher'
     | '/$page'
     | '/all-payments'
     | '/announcements'
@@ -295,6 +394,16 @@ export interface FileRouteTypes {
     | '/students'
     | '/subjects'
     | '/timetable'
+    | '/teacher/attendance'
+    | '/teacher/classes'
+    | '/teacher/dashboard'
+    | '/teacher/leave'
+    | '/teacher/marks'
+    | '/teacher/subjects'
+    | '/teacher/timetable'
+    | '/teacher/transport'
+    | '/teacher/'
+    | '/teacher/classes/$classId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -323,11 +432,22 @@ export interface FileRouteTypes {
     | '/students'
     | '/subjects'
     | '/timetable'
+    | '/teacher/attendance'
+    | '/teacher/classes'
+    | '/teacher/dashboard'
+    | '/teacher/leave'
+    | '/teacher/marks'
+    | '/teacher/subjects'
+    | '/teacher/timetable'
+    | '/teacher/transport'
+    | '/teacher'
+    | '/teacher/classes/$classId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/teacher'
     | '/_authenticated/$page'
     | '/_authenticated/all-payments'
     | '/_authenticated/announcements'
@@ -352,16 +472,34 @@ export interface FileRouteTypes {
     | '/_authenticated/students'
     | '/_authenticated/subjects'
     | '/_authenticated/timetable'
+    | '/teacher/attendance'
+    | '/teacher/classes'
+    | '/teacher/dashboard'
+    | '/teacher/leave'
+    | '/teacher/marks'
+    | '/teacher/subjects'
+    | '/teacher/timetable'
+    | '/teacher/transport'
+    | '/teacher/'
+    | '/teacher/classes/$classId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
+  TeacherRoute: typeof TeacherRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/teacher': {
+      id: '/teacher'
+      path: '/teacher'
+      fullPath: '/teacher'
+      preLoaderRoute: typeof TeacherRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -382,6 +520,69 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/teacher/': {
+      id: '/teacher/'
+      path: '/'
+      fullPath: '/teacher/'
+      preLoaderRoute: typeof TeacherIndexRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/transport': {
+      id: '/teacher/transport'
+      path: '/transport'
+      fullPath: '/teacher/transport'
+      preLoaderRoute: typeof TeacherTransportRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/timetable': {
+      id: '/teacher/timetable'
+      path: '/timetable'
+      fullPath: '/teacher/timetable'
+      preLoaderRoute: typeof TeacherTimetableRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/subjects': {
+      id: '/teacher/subjects'
+      path: '/subjects'
+      fullPath: '/teacher/subjects'
+      preLoaderRoute: typeof TeacherSubjectsRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/marks': {
+      id: '/teacher/marks'
+      path: '/marks'
+      fullPath: '/teacher/marks'
+      preLoaderRoute: typeof TeacherMarksRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/leave': {
+      id: '/teacher/leave'
+      path: '/leave'
+      fullPath: '/teacher/leave'
+      preLoaderRoute: typeof TeacherLeaveRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/dashboard': {
+      id: '/teacher/dashboard'
+      path: '/dashboard'
+      fullPath: '/teacher/dashboard'
+      preLoaderRoute: typeof TeacherDashboardRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/classes': {
+      id: '/teacher/classes'
+      path: '/classes'
+      fullPath: '/teacher/classes'
+      preLoaderRoute: typeof TeacherClassesRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/attendance': {
+      id: '/teacher/attendance'
+      path: '/attendance'
+      fullPath: '/teacher/attendance'
+      preLoaderRoute: typeof TeacherAttendanceRouteImport
+      parentRoute: typeof TeacherRoute
     }
     '/_authenticated/timetable': {
       id: '/_authenticated/timetable'
@@ -551,6 +752,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPageRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/teacher/classes/$classId': {
+      id: '/teacher/classes/$classId'
+      path: '/$classId'
+      fullPath: '/teacher/classes/$classId'
+      preLoaderRoute: typeof TeacherClassesClassIdRouteImport
+      parentRoute: typeof TeacherClassesRoute
+    }
   }
 }
 
@@ -612,11 +820,61 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface TeacherClassesRouteChildren {
+  TeacherClassesClassIdRoute: typeof TeacherClassesClassIdRoute
+}
+
+const TeacherClassesRouteChildren: TeacherClassesRouteChildren = {
+  TeacherClassesClassIdRoute: TeacherClassesClassIdRoute,
+}
+
+const TeacherClassesRouteWithChildren = TeacherClassesRoute._addFileChildren(
+  TeacherClassesRouteChildren,
+)
+
+interface TeacherRouteChildren {
+  TeacherAttendanceRoute: typeof TeacherAttendanceRoute
+  TeacherClassesRoute: typeof TeacherClassesRouteWithChildren
+  TeacherDashboardRoute: typeof TeacherDashboardRoute
+  TeacherLeaveRoute: typeof TeacherLeaveRoute
+  TeacherMarksRoute: typeof TeacherMarksRoute
+  TeacherSubjectsRoute: typeof TeacherSubjectsRoute
+  TeacherTimetableRoute: typeof TeacherTimetableRoute
+  TeacherTransportRoute: typeof TeacherTransportRoute
+  TeacherIndexRoute: typeof TeacherIndexRoute
+}
+
+const TeacherRouteChildren: TeacherRouteChildren = {
+  TeacherAttendanceRoute: TeacherAttendanceRoute,
+  TeacherClassesRoute: TeacherClassesRouteWithChildren,
+  TeacherDashboardRoute: TeacherDashboardRoute,
+  TeacherLeaveRoute: TeacherLeaveRoute,
+  TeacherMarksRoute: TeacherMarksRoute,
+  TeacherSubjectsRoute: TeacherSubjectsRoute,
+  TeacherTimetableRoute: TeacherTimetableRoute,
+  TeacherTransportRoute: TeacherTransportRoute,
+  TeacherIndexRoute: TeacherIndexRoute,
+}
+
+const TeacherRouteWithChildren =
+  TeacherRoute._addFileChildren(TeacherRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
+  TeacherRoute: TeacherRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
