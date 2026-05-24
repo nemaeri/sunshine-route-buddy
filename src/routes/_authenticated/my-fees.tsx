@@ -20,6 +20,8 @@ function MyFeesPage() {
   const { user } = useAuth();
   const search = Route.useSearch();
   const [selectedStudent, setSelectedStudent] = useState<string | undefined>(search.student);
+  const [openForm, setOpenForm] = useState<"mpesa" | "bank" | null>(null);
+  const [formPupil, setFormPupil] = useState<string | undefined>(undefined);
 
   const childrenQ = useQuery({
     enabled: !!user,
