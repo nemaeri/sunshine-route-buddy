@@ -330,7 +330,10 @@ function MyFeesPage() {
                 <td className="px-4 py-3 text-muted-foreground">{p.reference ?? "—"}</td>
                 <td className="px-4 py-3">{p.method}</td>
                 <td className="px-4 py-3">
-                  <button className="text-xs px-2 py-1 rounded border border-border hover:bg-secondary inline-flex items-center gap-1">
+                  <button
+                    onClick={() => setReceiptId(p.id)}
+                    className="text-xs px-2 py-1 rounded border border-border hover:bg-secondary inline-flex items-center gap-1"
+                  >
                     <FileText className="size-3" /> Open receipt
                   </button>
                 </td>
@@ -339,6 +342,138 @@ function MyFeesPage() {
           </tbody>
         </table>
       </Card>
+
+      {receiptId && (() => {
+        const p: any = (activePayments ?? []).find((x: any) => x.id === receiptId);
+        if (!p) return null;
+        const inv: any = (invQ.data ?? []).find((i: any) => i.id === p.invoice_id);
+        const child: any = (childrenQ.data ?? []).find(
+          (c: any) => c.id === inv?.student_id,
+        );
+        const school: any = schoolQ.data ?? {};
+        const receiptNo = `RCT-${new Date(p.paid_on).getFullYear()}-${p.id
+          .replace(/-/g, "")
+          .slice(0, 6)
+          .toUpperCase()}`;
+        return (
+          <div
+            className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+            onClick={() => setReceiptId(null)}
+          >
+            <div
+              className="bg-card rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+                <h3 className="font-semibold text-sm">Receipt {receiptNo}</h3>
+                <button
+                  onClick={() => setReceiptId(null)}
+                  className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground"
+                  aria-label="Close"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              <div className="p-6 print:p-4">
+                <div className="text-center mb-4">
+                  {school.logo_url && (
+                    <img
+                      src={school.logo_url}
+                      alt=""
+                      className="size-14 mx-auto mb-2 object-contain"
+                    />
+                  )}
+                  <h2 className="font-display font-bold text-lg">
+                    {school.name ?? "School"}
+                  </h2>
+                  {(school.p_o_box || school.town) && (
+                    <p className="text-xs text-muted-foreground">
+                      {school.p_o_box ? `P.O. BOX ${school.p_o_box}` : ""}
+                      {school.town ? ` · ${school.town.toUpperCase()}` : ""}
+                    </p>
+                  )}
+                  {school.phone && (
+                    <p className="text-xs text-muted-foreground">Tel: {school.phone}</p>
+                  )}
+                </div>
+
+                <div className="bg-secondary/60 text-center py-2 rounded text-[11px] font-bold uppercase tracking-widest mb-4">
+                  Official Receipt
+                </div>
+
+                <dl className="text-sm space-y-2 mb-4">
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Receipt No</dt>
+                    <dd className="font-semibold">{receiptNo}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Date</dt>
+                    <dd className="font-semibold">
+                      {new Date(p.paid_on).toLocaleDateString(undefined, {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </dd>
+                  </div>
+                </dl>
+
+                <div className="border-t border-border pt-3 text-sm space-y-2 mb-4">
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Student</dt>
+                    <dd className="font-semibold">
+                      {child ? `${child.first_name} ${child.last_name}` : "—"}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Adm No.</dt>
+                    <dd className="font-semibold">{child?.admission_no ?? "—"}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Class</dt>
+                    <dd className="font-semibold">{child?.classes?.name ?? "—"}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Method</dt>
+                    <dd className="font-semibold">
+                      {p.method}
+                      {p.reference ? ` · ${p.reference}` : ""}
+                    </dd>
+                  </div>
+                </div>
+
+                <div className="bg-brand-navy text-white px-4 py-3 rounded flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-widest">
+                    Amount Paid
+                  </span>
+                  <span className="font-bold">{fmt(Number(p.amount))}</span>
+                </div>
+                <div className="bg-emerald-50 text-emerald-900 px-4 py-2.5 rounded flex items-center justify-between mb-4">
+                  <span className="text-xs">Balance after</span>
+                  <span className="font-semibold text-sm">
+                    {fmt(Number(inv?.balance ?? 0))}
+                  </span>
+                </div>
+
+                <p className="text-center text-xs text-muted-foreground">
+                  Thank you · {school.name ?? ""}
+                </p>
+
+                <div className="mt-5 flex justify-center print:hidden">
+                  <button
+                    onClick={() => window.print()}
+                    className="px-4 py-2 rounded-md bg-secondary hover:bg-secondary/80 text-sm font-semibold inline-flex items-center gap-2"
+                  >
+                    <Printer className="size-4" /> Print
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </>
   );
 }
