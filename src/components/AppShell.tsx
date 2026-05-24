@@ -21,6 +21,7 @@ import {
   BarChart3,
   
   Baby,
+  Megaphone,
   Wallet,
   LineChart,
   ClipboardCheck,
