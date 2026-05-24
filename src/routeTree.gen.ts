@@ -48,6 +48,7 @@ import { Route as AuthenticatedBusRouteImport } from './routes/_authenticated/bu
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
 import { Route as AuthenticatedAnnouncementsRouteImport } from './routes/_authenticated/announcements'
 import { Route as AuthenticatedAllPaymentsRouteImport } from './routes/_authenticated/all-payments'
+import { Route as AuthenticatedAccountsRouteImport } from './routes/_authenticated/accounts'
 import { Route as AuthenticatedPageRouteImport } from './routes/_authenticated/$page'
 import { Route as TeacherClassesClassIdRouteImport } from './routes/teacher/classes.$classId'
 
@@ -255,6 +256,11 @@ const AuthenticatedAllPaymentsRoute =
     path: '/all-payments',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAccountsRoute = AuthenticatedAccountsRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedPageRoute = AuthenticatedPageRouteImport.update({
   id: '/$page',
   path: '/$page',
@@ -271,6 +277,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/teacher': typeof TeacherRouteWithChildren
   '/$page': typeof AuthenticatedPageRoute
+  '/accounts': typeof AuthenticatedAccountsRoute
   '/all-payments': typeof AuthenticatedAllPaymentsRoute
   '/announcements': typeof AuthenticatedAnnouncementsRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
@@ -312,6 +319,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/$page': typeof AuthenticatedPageRoute
+  '/accounts': typeof AuthenticatedAccountsRoute
   '/all-payments': typeof AuthenticatedAllPaymentsRoute
   '/announcements': typeof AuthenticatedAnnouncementsRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
@@ -356,6 +364,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/teacher': typeof TeacherRouteWithChildren
   '/_authenticated/$page': typeof AuthenticatedPageRoute
+  '/_authenticated/accounts': typeof AuthenticatedAccountsRoute
   '/_authenticated/all-payments': typeof AuthenticatedAllPaymentsRoute
   '/_authenticated/announcements': typeof AuthenticatedAnnouncementsRoute
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
@@ -400,6 +409,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/teacher'
     | '/$page'
+    | '/accounts'
     | '/all-payments'
     | '/announcements'
     | '/attendance'
@@ -441,6 +451,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/$page'
+    | '/accounts'
     | '/all-payments'
     | '/announcements'
     | '/attendance'
@@ -484,6 +495,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/teacher'
     | '/_authenticated/$page'
+    | '/_authenticated/accounts'
     | '/_authenticated/all-payments'
     | '/_authenticated/announcements'
     | '/_authenticated/attendance'
@@ -804,6 +816,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAllPaymentsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/accounts': {
+      id: '/_authenticated/accounts'
+      path: '/accounts'
+      fullPath: '/accounts'
+      preLoaderRoute: typeof AuthenticatedAccountsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/$page': {
       id: '/_authenticated/$page'
       path: '/$page'
@@ -823,6 +842,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedPageRoute: typeof AuthenticatedPageRoute
+  AuthenticatedAccountsRoute: typeof AuthenticatedAccountsRoute
   AuthenticatedAllPaymentsRoute: typeof AuthenticatedAllPaymentsRoute
   AuthenticatedAnnouncementsRoute: typeof AuthenticatedAnnouncementsRoute
   AuthenticatedAttendanceRoute: typeof AuthenticatedAttendanceRoute
@@ -853,6 +873,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPageRoute: AuthenticatedPageRoute,
+  AuthenticatedAccountsRoute: AuthenticatedAccountsRoute,
   AuthenticatedAllPaymentsRoute: AuthenticatedAllPaymentsRoute,
   AuthenticatedAnnouncementsRoute: AuthenticatedAnnouncementsRoute,
   AuthenticatedAttendanceRoute: AuthenticatedAttendanceRoute,

@@ -87,6 +87,7 @@ const SECTIONS: NavSection[] = [
       { to: "/finance-overview", label: "Finance Overview", icon: PieChart, roles: ADMINISH },
       { to: "/payroll", label: "Payroll", icon: Banknote, roles: ADMINISH },
       { to: "/student-ledger", label: "Student Ledger", icon: BookUser, roles: ADMINISH },
+      { to: "/accounts", label: "Accounts", icon: Library, roles: ADMINISH },
     ],
   },
   {
