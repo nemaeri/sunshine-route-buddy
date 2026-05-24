@@ -22,6 +22,15 @@ function MyFeesPage() {
   const [selectedStudent, setSelectedStudent] = useState<string | undefined>(search.student);
   const [openForm, setOpenForm] = useState<"mpesa" | "bank" | null>(null);
   const [formPupil, setFormPupil] = useState<string | undefined>(undefined);
+  const [receiptId, setReceiptId] = useState<string | null>(null);
+
+  const schoolQ = useQuery({
+    queryKey: ["mf-school"],
+    queryFn: async () => {
+      const { data } = await supabase.from("school_settings").select("*").maybeSingle();
+      return data;
+    },
+  });
 
   const childrenQ = useQuery({
     enabled: !!user,
