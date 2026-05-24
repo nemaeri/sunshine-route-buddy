@@ -38,7 +38,7 @@ function MyFeesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("student_parents")
-        .select("students:student_id ( id, first_name, last_name, classes:class_id ( name ) )")
+        .select("students:student_id ( id, first_name, last_name, admission_no, classes:class_id ( name ) )")
         .eq("parent_id", user!.id);
       if (error) throw error;
       return (data ?? []).map((r: any) => r.students).filter(Boolean);
