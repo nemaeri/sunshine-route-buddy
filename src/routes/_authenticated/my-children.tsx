@@ -197,6 +197,7 @@ function MyChildrenPage() {
 
                 <Link
                   to="/my-fees"
+                  search={{ student: s.id }}
                   className="mt-3 flex items-center justify-center gap-2 w-full text-sm font-bold px-3 py-2.5 rounded-md bg-gradient-to-r from-brand-navy to-sky-700 text-white hover:opacity-95"
                 >
                   <Receipt className="size-4" /> Fees
