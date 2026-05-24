@@ -440,6 +440,167 @@ function FinanceOverviewPage() {
           </div>
         </Card>
       </div>
+
+      {payFor && (
+        <RecordPaymentDialog
+          student={payFor}
+          onClose={() => setPayFor(null)}
+          onDone={() => {
+            setPayFor(null);
+            qc.invalidateQueries({ queryKey: ["fin-overview"] });
+          }}
+        />
+      )}
     </>
+  );
+}
+
+function RecordPaymentDialog({
+  student,
+  onClose,
+  onDone,
+}: {
+  student: { id: string; name: string; balance: number };
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [amount, setAmount] = useState<string>(String(Math.round(student.balance)));
+  const [method, setMethod] = useState("mpesa");
+  const [reference, setReference] = useState("");
+
+  const mut = useMutation({
+    mutationFn: async () => {
+      const amt = Number(amount);
+      if (!amt || amt <= 0) throw new Error("Enter a valid amount");
+
+      // Fetch unpaid invoices for this student, oldest first
+      const { data: invoices, error: invErr } = await supabase
+        .from("invoices")
+        .select("id, balance")
+        .eq("student_id", student.id)
+        .gt("balance", 0)
+        .order("created_at", { ascending: true });
+      if (invErr) throw invErr;
+      if (!invoices || invoices.length === 0) throw new Error("No outstanding invoices");
+
+      const { data: userData } = await supabase.auth.getUser();
+      const recordedBy = userData.user?.id ?? null;
+
+      let remaining = amt;
+      for (const inv of invoices) {
+        if (remaining <= 0) break;
+        const bal = Number(inv.balance);
+        const apply = Math.min(bal, remaining);
+
+        const { error: payErr } = await supabase.from("payments").insert({
+          invoice_id: inv.id,
+          amount: apply,
+          method,
+          reference: reference || null,
+          recorded_by: recordedBy,
+        });
+        if (payErr) throw payErr;
+
+        const newBal = +(bal - apply).toFixed(2);
+        const { error: updErr } = await supabase
+          .from("invoices")
+          .update({ balance: newBal, status: newBal <= 0 ? "paid" : "partial" })
+          .eq("id", inv.id);
+        if (updErr) throw updErr;
+
+        remaining -= apply;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Payment recorded");
+      onDone();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-card rounded-xl border border-border shadow-xl w-full max-w-md"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-5 border-b border-border">
+          <div>
+            <div className="font-display font-bold text-lg">Record payment</div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {student.name} · Balance:{" "}
+              <span className="text-rose-600 font-semibold">KES {Math.round(student.balance).toLocaleString()}</span>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="size-5" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Amount (KES)
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background"
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Method
+            </label>
+            <select
+              value={method}
+              onChange={(e) => setMethod(e.target.value)}
+              className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background"
+            >
+              <option value="mpesa">M-Pesa</option>
+              <option value="bank">Bank</option>
+              <option value="cash">Cash</option>
+              <option value="cheque">Cheque</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Reference / Receipt no.
+            </label>
+            <input
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              placeholder="e.g. MPesa code"
+              className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Payment is applied to outstanding invoices in order (oldest first).
+          </p>
+        </div>
+
+        <div className="p-5 border-t border-border flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-md text-sm font-medium border border-border hover:bg-secondary"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={mut.isPending}
+            onClick={() => mut.mutate()}
+            className="px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            {mut.isPending ? "Recording…" : "Record payment"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
