@@ -143,13 +143,154 @@ function MyFeesPage() {
       </Card>
 
       <div className="grid grid-cols-2 gap-3 mb-6">
-        <button className="p-4 rounded-xl bg-gradient-to-br from-brand-navy to-brand-navy/80 text-white font-bold flex items-center justify-center gap-2">
+        <button
+          onClick={() => {
+            setOpenForm(openForm === "mpesa" ? null : "mpesa");
+            if (!formPupil) setFormPupil(activeStudent);
+          }}
+          className={`p-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${
+            openForm === "mpesa"
+              ? "bg-gradient-to-br from-brand-navy to-brand-navy/80 text-white"
+              : "bg-card border border-border hover:bg-secondary"
+          }`}
+        >
           <Smartphone className="size-4" /> M-Pesa
         </button>
-        <button className="p-4 rounded-xl bg-card border border-border font-bold flex items-center justify-center gap-2 hover:bg-secondary">
+        <button
+          onClick={() => {
+            setOpenForm(openForm === "bank" ? null : "bank");
+            if (!formPupil) setFormPupil(activeStudent);
+          }}
+          className={`p-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${
+            openForm === "bank"
+              ? "bg-gradient-to-br from-brand-navy to-brand-navy/80 text-white"
+              : "bg-card border border-border hover:bg-secondary"
+          }`}
+        >
           <Landmark className="size-4" /> Bank
         </button>
       </div>
+
+      {openForm && (
+        <Card className="p-6 mb-6">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="font-display font-bold text-lg">
+              {openForm === "mpesa" ? "Pay via M-Pesa" : "Bank / payslip"}
+            </h3>
+            <button
+              onClick={() => setOpenForm(null)}
+              className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground"
+              aria-label="Close"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              setOpenForm(null);
+            }}
+          >
+            <div>
+              <label className="text-sm font-semibold block mb-1.5">Pupil</label>
+              <select
+                value={formPupil ?? ""}
+                onChange={(e) => setFormPupil(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-md border border-border bg-background text-sm"
+              >
+                {(childrenQ.data ?? []).map((c: any) => (
+                  <option key={c.id} value={c.id}>
+                    {c.first_name} {c.last_name}
+                    {c.classes?.name ? ` · ${c.classes.name}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold block mb-1.5">Amount paid (KES)</label>
+              <input
+                type="number"
+                min="1"
+                placeholder="e.g. 7500"
+                className="w-full px-3 py-2.5 rounded-md border border-border bg-background text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold block mb-1.5">Purpose</label>
+              <input
+                type="text"
+                placeholder="e.g. Term 2 Tuition"
+                className="w-full px-3 py-2.5 rounded-md border border-border bg-background text-sm"
+              />
+            </div>
+
+            {openForm === "mpesa" ? (
+              <>
+                <div>
+                  <label className="text-sm font-semibold block mb-1.5">M-Pesa code</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. SJK7H2A9B1"
+                    className="w-full px-3 py-2.5 rounded-md border border-border bg-background text-sm uppercase"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold block mb-1.5">Phone used (optional)</label>
+                  <input
+                    type="tel"
+                    placeholder="07XX XXX XXX"
+                    className="w-full px-3 py-2.5 rounded-md border border-border bg-background text-sm"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="text-sm font-semibold block mb-1.5">
+                    Bank / reference (optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Receipt or transaction ref"
+                    className="w-full px-3 py-2.5 rounded-md border border-border bg-background text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold block mb-1.5">
+                    Payment date (optional)
+                  </label>
+                  <input
+                    type="date"
+                    className="w-full px-3 py-2.5 rounded-md border border-border bg-background text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold block mb-1.5">
+                    Payslip scan (PDF, JPG, PNG · max 5 MB)
+                  </label>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="w-full text-sm file:mr-3 file:px-3 file:py-2 file:rounded-md file:border-0 file:bg-secondary file:text-foreground file:font-semibold"
+                  />
+                </div>
+              </>
+            )}
+
+            <button
+              type="submit"
+              className="w-full py-3 rounded-lg bg-gradient-to-br from-brand-navy to-brand-navy/80 text-white font-bold flex items-center justify-center gap-2"
+            >
+              <Upload className="size-4" /> Submit
+            </button>
+          </form>
+        </Card>
+      )}
+
 
       <h3 className="font-display font-bold text-lg mb-3">Payment history</h3>
       <Card className="overflow-hidden">
