@@ -111,10 +111,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const { user, roles, signOut } = useAuth();
   const location = useRouterState({ select: (s) => s.location.pathname });
 
-  // Parent view is exclusive: if the user has the parent role, show only
-  // parent-scoped items even if they also have admin/staff roles.
-  const isParent = roles.includes("parent");
-  const effectiveRoles: AppRole[] = isParent ? ["parent"] : roles;
+  // Parent portal is exclusive ONLY when parent is the user's sole role.
+  // Staff roles (admin, finance, teacher, head_teacher) — including
+  // accountants — always get their full staff navigation even if they
+  // also happen to be linked as a parent.
+  const STAFF_ROLES: AppRole[] = ["admin", "head_teacher", "finance", "teacher"];
+  const hasStaffRole = roles.some((r) => STAFF_ROLES.includes(r));
+  const effectiveRoles: AppRole[] = hasStaffRole
+    ? roles.filter((r) => r !== "parent")
+    : roles;
   const visibleSections = SECTIONS.map((s) => ({
     ...s,
     items: s.items.filter((n) => !n.roles || n.roles.some((r) => effectiveRoles.includes(r))),
