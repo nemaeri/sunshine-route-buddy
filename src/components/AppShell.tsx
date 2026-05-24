@@ -18,6 +18,7 @@ import {
   PieChart,
   Banknote,
   BookUser,
+  Library,
   BarChart3,
   
   Baby,
