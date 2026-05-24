@@ -90,17 +90,21 @@ function StudentLedgerPage() {
 
   return (
     <>
-      <PageHeader title="Student Ledger" description="Fee status (view only)">
-        <div className="relative">
-          <Search className="size-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search…"
-            className="pl-9 pr-3 py-2 text-sm rounded-md border border-border bg-background w-64"
-          />
-        </div>
-      </PageHeader>
+      <PageHeader
+        title="Student Ledger"
+        description="Fee status (view only)"
+        actions={
+          <div className="relative">
+            <Search className="size-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search…"
+              className="pl-9 pr-3 py-2 text-sm rounded-md border border-border bg-background w-64"
+            />
+          </div>
+        }
+      />
 
       {!canRecord && (
         <Card className="p-4 mb-6 border-l-4 border-l-amber-500">
