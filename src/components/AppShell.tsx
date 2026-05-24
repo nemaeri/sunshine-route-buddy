@@ -109,9 +109,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const { user, roles, signOut } = useAuth();
   const location = useRouterState({ select: (s) => s.location.pathname });
 
+  // Parent view is exclusive: if the user has the parent role, show only
+  // parent-scoped items even if they also have admin/staff roles.
+  const isParent = roles.includes("parent");
+  const effectiveRoles: AppRole[] = isParent ? ["parent"] : roles;
   const visibleSections = SECTIONS.map((s) => ({
     ...s,
-    items: s.items.filter((n) => !n.roles || n.roles.some((r) => roles.includes(r))),
+    items: s.items.filter((n) => !n.roles || n.roles.some((r) => effectiveRoles.includes(r))),
   })).filter((s) => s.items.length > 0);
   const primaryRole = roles[0] ?? "user";
 
