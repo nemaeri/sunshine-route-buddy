@@ -357,12 +357,13 @@ function FinanceOverviewPage() {
                   <th className="text-left font-medium px-5 py-3">Adm. No</th>
                   <th className="text-left font-medium px-5 py-3">Class</th>
                   <th className="text-right font-medium px-5 py-3">Balance</th>
+                  <th className="text-right font-medium px-5 py-3">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {(stats.defaultersList || []).length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-5 py-6 text-center text-muted-foreground">
+                    <td colSpan={5} className="px-5 py-6 text-center text-muted-foreground">
                       No defaulters
                     </td>
                   </tr>
@@ -374,6 +375,16 @@ function FinanceOverviewPage() {
                       <td className="px-5 py-3 text-muted-foreground">{s.className}</td>
                       <td className="px-5 py-3 text-right text-rose-600 font-semibold">
                         {KES(s.balance)}
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <button
+                          onClick={() =>
+                            setPayFor({ id: s.id, name: s.name, balance: s.balance })
+                          }
+                          className="text-xs font-semibold px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+                        >
+                          Record payment
+                        </button>
                       </td>
                     </tr>
                   ))
