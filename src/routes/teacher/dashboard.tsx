@@ -3,14 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeacherStaff } from "@/hooks/useTeacherStaff";
 import { Card } from "@/components/PageHeader";
-import { Building2, Users, CalendarCheck, Pencil, BookOpen, CalendarRange, ChevronRight } from "lucide-react";
+import { Building2, Users, CalendarCheck, Pencil, BookOpen, CalendarRange, ChevronRight, Star } from "lucide-react";
 
 export const Route = createFileRoute("/teacher/dashboard")({
   component: TeacherDashboard,
   head: () => ({ meta: [{ title: "My Dashboard — Teacher" }] }),
 });
 
-const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
 
 function TeacherDashboard() {
   const { data: staff } = useTeacherStaff();
@@ -199,8 +199,6 @@ function TeacherDashboard() {
     </div>
   );
 }
-
-import { Star } from "lucide-react";
 
 function Stat({ icon: Icon, value, label, tone }: { icon: any; value: any; label: string; tone: "sky"|"emerald"|"amber" }) {
   const tones = {
