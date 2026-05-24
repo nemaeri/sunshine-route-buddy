@@ -12,8 +12,9 @@ export const Route = createFileRoute("/auth")({
 async function landingPathForUser(userId: string): Promise<string> {
   const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
   const roles = (data ?? []).map((r: any) => r.role as string);
-  if (roles.includes("admin") || roles.includes("head_teacher")) return "/dashboard";
+  if (roles.includes("admin") || roles.includes("head_teacher") || roles.includes("finance")) return "/dashboard";
   if (roles.includes("teacher")) return "/teacher/dashboard";
+  if (roles.includes("parent")) return "/my-children";
   return "/dashboard";
 }
 
