@@ -50,6 +50,7 @@ const SECTIONS: NavSection[] = [
       { to: "/my-performance", label: "Performance", icon: LineChart, roles: ["parent"] },
       { to: "/my-attendance", label: "Attendance", icon: ClipboardCheck, roles: ["parent"] },
       { to: "/bus", label: "Transport", icon: Bus, roles: ["parent"] },
+      { to: "/announcements", label: "Announcements", icon: Megaphone, roles: ["parent"] },
     ],
   },
   {
