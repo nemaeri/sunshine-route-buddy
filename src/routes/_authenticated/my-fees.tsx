@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, Card } from "@/components/PageHeader";
 import { useAuth } from "@/hooks/useAuth";
-import { Smartphone, Landmark, FileText, User, X, Upload } from "lucide-react";
+import { Smartphone, Landmark, FileText, User, X, Upload, Printer } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/my-fees")({
