@@ -21,6 +21,9 @@ import {
   BarChart3,
   Megaphone,
   Baby,
+  Wallet,
+  LineChart,
+  ClipboardCheck,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 
