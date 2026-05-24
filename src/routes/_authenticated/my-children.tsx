@@ -205,12 +205,14 @@ function MyChildrenPage() {
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   <Link
                     to="/my-performance"
+                    search={{ student: s.id }}
                     className="flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-2 rounded-md border border-border hover:bg-secondary"
                   >
                     <BarChart3 className="size-4" /> Scores
                   </Link>
                   <Link
                     to="/my-attendance"
+                    search={{ student: s.id }}
                     className="flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-2 rounded-md border border-border hover:bg-secondary"
                   >
                     <Calendar className="size-4" /> Attend
