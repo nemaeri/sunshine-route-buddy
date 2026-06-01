@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, Receipt, Wallet } from "lucide-react";
+import { Plus, Receipt } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/finance")({
   component: FinancePage,
@@ -49,12 +49,7 @@ function FinancePage() {
   });
 
   const summary = (invoicesQ.data ?? []).reduce(
-    (a, i: any) => {
-      a.total += Number(i.total_amount);
-      a.outstanding += Number(i.balance);
-      a.count += 1;
-      return a;
-    },
+    (a, i: any) => { a.total += Number(i.total_amount); a.outstanding += Number(i.balance); a.count += 1; return a; },
     { total: 0, outstanding: 0, count: 0 }
   );
 
@@ -67,22 +62,11 @@ function FinancePage() {
           <NewInvoiceDialog onDone={() => { qc.invalidateQueries({ queryKey: ["invoices"] }); qc.invalidateQueries({ queryKey: ["fin-overview"] }); }} />
         ) : null}
       />
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="p-5">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Invoices</p>
-          <p className="text-3xl font-display font-bold text-brand-navy mt-1">{summary.count}</p>
-        </Card>
-        <Card className="p-5">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total billed</p>
-          <p className="text-3xl font-display font-bold text-brand-navy mt-1">{kes(summary.total)}</p>
-        </Card>
-        <Card className="p-5">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Outstanding</p>
-          <p className="text-3xl font-display font-bold text-brand-gold mt-1">{kes(summary.outstanding)}</p>
-        </Card>
+        <Card className="p-5"><p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Invoices</p><p className="text-3xl font-display font-bold text-brand-navy mt-1">{summary.count}</p></Card>
+        <Card className="p-5"><p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total billed</p><p className="text-3xl font-display font-bold text-brand-navy mt-1">{kes(summary.total)}</p></Card>
+        <Card className="p-5"><p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Outstanding</p><p className="text-3xl font-display font-bold text-brand-gold mt-1">{kes(summary.outstanding)}</p></Card>
       </div>
-
       <Card className="overflow-hidden">
         <div className="px-5 py-3 border-b border-border bg-secondary/30 flex items-center justify-between">
           <h3 className="font-display font-bold text-sm flex items-center gap-2"><Receipt className="size-4" /> Recent invoices</h3>
@@ -111,13 +95,11 @@ function InvoiceRow({ invoice, canManage, userId }: { invoice: any; canManage: b
       const amt = Number(amount);
       if (!amt || amt <= 0) throw new Error("Enter an amount");
       const { error } = await supabase.from("payments").insert({
-        invoice_id: invoice.id, amount: amt, method, reference: reference || null,
-        recorded_by: userId,
+        invoice_id: invoice.id, amount: amt, method, reference: reference || null, recorded_by: userId,
       });
       if (error) throw error;
       const newBal = Math.max(0, Number(invoice.balance) - amt);
-      const newStatus = newBal === 0 ? "paid" : "partial";
-      await supabase.from("invoices").update({ balance: newBal, status: newStatus }).eq("id", invoice.id);
+      await supabase.from("invoices").update({ balance: newBal, status: newBal === 0 ? "paid" : "partial" }).eq("id", invoice.id);
     },
     onSuccess: () => {
       toast.success("Payment recorded");
@@ -139,18 +121,10 @@ function InvoiceRow({ invoice, canManage, userId }: { invoice: any; canManage: b
     <li className="px-5 py-3 flex items-center justify-between gap-4">
       <div className="flex-1">
         <p className="text-sm font-medium">{invoice.students?.first_name} {invoice.students?.last_name}</p>
-        <p className="text-[11px] text-muted-foreground">
-          {invoice.students?.admission_no} · {invoice.terms?.academic_year} T{invoice.terms?.term_number}
-          {invoice.due_date ? ` · due ${new Date(invoice.due_date).toLocaleDateString()}` : ""}
-        </p>
+        <p className="text-[11px] text-muted-foreground">{invoice.students?.admission_no} · {invoice.terms?.academic_year} T{invoice.terms?.term_number}{invoice.due_date ? ` · due ${new Date(invoice.due_date).toLocaleDateString()}` : ""}</p>
       </div>
-      <div className="text-right">
-        <p className="text-sm font-bold">{kes(invoice.balance)}</p>
-        <p className="text-[10px] text-muted-foreground">of {kes(invoice.total_amount)}</p>
-      </div>
-      <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-1 rounded ${statusTone[invoice.status] ?? "bg-secondary text-muted-foreground"}`}>
-        {invoice.status}
-      </span>
+      <div className="text-right"><p className="text-sm font-bold">{kes(invoice.balance)}</p><p className="text-[10px] text-muted-foreground">of {kes(invoice.total_amount)}</p></div>
+      <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-1 rounded ${statusTone[invoice.status] ?? "bg-secondary text-muted-foreground"}`}>{invoice.status}</span>
       {canManage && Number(invoice.balance) > 0 && (
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button size="sm" variant="outline">Record payment</Button></DialogTrigger>
@@ -159,13 +133,9 @@ function InvoiceRow({ invoice, canManage, userId }: { invoice: any; canManage: b
             <div className="space-y-3">
               <div><Label>Amount (KES)</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Method</Label>
+                <div><Label>Method</Label>
                   <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={method} onChange={(e) => setMethod(e.target.value)}>
-                    <option value="mpesa">M-Pesa</option>
-                    <option value="bank">Bank transfer</option>
-                    <option value="cash">Cash</option>
-                    <option value="cheque">Cheque</option>
+                    <option value="mpesa">M-Pesa</option><option value="bank">Bank transfer</option><option value="cash">Cash</option><option value="cheque">Cheque</option>
                   </select>
                 </div>
                 <div><Label>Reference</Label><Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="QGH8X1..." /></div>
@@ -197,14 +167,7 @@ function NewInvoiceDialog({ onDone }: { onDone: () => void }) {
 
   const m = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("invoices").insert({
-        student_id: form.student_id,
-        term_id: form.term_id,
-        total_amount: form.total_amount,
-        balance: form.total_amount,
-        due_date: form.due_date || null,
-        status: "pending",
-      });
+      const { error } = await supabase.from("invoices").insert({ student_id: form.student_id, term_id: form.term_id, total_amount: form.total_amount, balance: form.total_amount, due_date: form.due_date || null, status: "pending" });
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Invoice created"); setOpen(false); onDone(); },
@@ -217,19 +180,15 @@ function NewInvoiceDialog({ onDone }: { onDone: () => void }) {
       <DialogContent>
         <DialogHeader><DialogTitle>Create invoice</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div>
-            <Label>Student</Label>
+          <div><Label>Student</Label>
             <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={form.student_id} onChange={(e) => setForm({ ...form, student_id: e.target.value })}>
-              <option value="">—</option>
-              {students.data?.map((s: any) => <option key={s.id} value={s.id}>{s.first_name} {s.last_name} ({s.admission_no})</option>)}
+              <option value="">—</option>{students.data?.map((s: any) => <option key={s.id} value={s.id}>{s.first_name} {s.last_name} ({s.admission_no})</option>)}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Term</Label>
+            <div><Label>Term</Label>
               <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={form.term_id} onChange={(e) => setForm({ ...form, term_id: e.target.value })}>
-                <option value="">—</option>
-                {terms.data?.map((t: any) => <option key={t.id} value={t.id}>{t.academic_year} T{t.term_number}</option>)}
+                <option value="">—</option>{terms.data?.map((t: any) => <option key={t.id} value={t.id}>{t.academic_year} T{t.term_number}</option>)}
               </select>
             </div>
             <div><Label>Amount (KES)</Label><Input type="number" value={form.total_amount} onChange={(e) => setForm({ ...form, total_amount: Number(e.target.value) })} /></div>
@@ -238,9 +197,7 @@ function NewInvoiceDialog({ onDone }: { onDone: () => void }) {
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={() => m.mutate()} disabled={!form.student_id || !form.term_id || !form.total_amount || m.isPending}>
-            {m.isPending ? "Creating…" : "Create"}
-          </Button>
+          <Button onClick={() => m.mutate()} disabled={!form.student_id || !form.term_id || !form.total_amount || m.isPending}>{m.isPending ? "Creating…" : "Create"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
