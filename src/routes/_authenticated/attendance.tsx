@@ -107,6 +107,7 @@ function AttendancePage() {
           </Button>
         ) : null}
       />
+
       <Card className="p-4 mb-4 flex flex-wrap items-end gap-4">
         <div>
           <Label>Class</Label>
@@ -125,6 +126,7 @@ function AttendancePage() {
           <Pill label="Excused" value={counts.excused ?? 0} tone="slate" />
         </div>
       </Card>
+
       <Card className="overflow-hidden">
         {rosterQ.isLoading && <p className="p-8 text-center text-sm text-muted-foreground">Loading roster…</p>}
         {!rosterQ.isLoading && rosterQ.data?.length === 0 && (
@@ -140,7 +142,13 @@ function AttendancePage() {
                 </div>
                 <div className="flex gap-1">
                   {(["present","absent","late","excused"] as Status[]).map((st) => (
-                    <StatusBtn key={st} status={st} active={marks[s.id] === st} disabled={!canMark} onClick={() => setMarks((m) => ({ ...m, [s.id]: st }))} />
+                    <StatusBtn
+                      key={st}
+                      status={st}
+                      active={marks[s.id] === st}
+                      disabled={!canMark}
+                      onClick={() => setMarks((m) => ({ ...m, [s.id]: st }))}
+                    />
                   ))}
                 </div>
               </li>
@@ -159,23 +167,32 @@ function Pill({ label, value, tone }: { label: string; value: number; tone: stri
     amber: "bg-amber-50 text-amber-700",
     slate: "bg-slate-100 text-slate-700",
   };
-  return <span className={`px-2.5 py-1 rounded-md font-bold ${tones[tone]}`}>{value} {label}</span>;
+  return (
+    <span className={`px-2.5 py-1 rounded-md font-bold ${tones[tone]}`}>
+      {value} {label}
+    </span>
+  );
 }
 
 function StatusBtn({ status, active, disabled, onClick }: { status: Status; active: boolean; disabled?: boolean; onClick: () => void }) {
-  const map: Record<Status, { icon: any; cls: string }> = {
-    present: { icon: Check, cls: "bg-emerald-600 text-white border-emerald-600" },
-    absent: { icon: X, cls: "bg-rose-600 text-white border-rose-600" },
-    late: { icon: Clock, cls: "bg-amber-500 text-white border-amber-500" },
-    excused: { icon: AlertCircle, cls: "bg-slate-600 text-white border-slate-600" },
+  const map: Record<Status, { icon: any; label: string; cls: string }> = {
+    present: { icon: Check, label: "P", cls: "bg-emerald-600 text-white border-emerald-600" },
+    absent: { icon: X, label: "A", cls: "bg-rose-600 text-white border-rose-600" },
+    late: { icon: Clock, label: "L", cls: "bg-amber-500 text-white border-amber-500" },
+    excused: { icon: AlertCircle, label: "E", cls: "bg-slate-600 text-white border-slate-600" },
   };
   const m = map[status];
   const Icon = m.icon;
   return (
-    <button type="button" disabled={disabled} onClick={onClick} title={status}
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      title={status}
       className={`size-9 rounded-md border flex items-center justify-center text-xs font-bold transition ${
         active ? m.cls : "bg-background border-border text-muted-foreground hover:bg-secondary"
-      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
+      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+    >
       <Icon className="size-4" />
     </button>
   );
